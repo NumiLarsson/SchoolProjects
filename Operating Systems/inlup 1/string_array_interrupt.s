@@ -145,31 +145,124 @@ __save_registers:
 	##### STEP 2: EXAMINE THE CAUSE REGISTER #####
 	##############################################
 	
-	### TODO: Use the mfc0 instruction to move the value in the coprocessor 0 
-	### Cause register ($13) to $k0. 
-	
 	mfc0 $k0, $13 	#move cause register ($13) to a usable register.
-	
         
-        ### TODO: Extract the exception code from the Cause register and store
-        ### the exception code in $k1. 
-        
-        ### Extract the exception code (bit 2-5) to $k1.
+        ### Extract the exception code from the cause register (bit 2-5) to $k1.
         srl $k1, $k0, 2
         andi $k1, $k1, 31 	# This could be done with andi $k1, $k0, 124 / 0x7c / 1111100 in binary 
-        
-        ### TIP 2: Remember that other bits (for example pending interrupt bits) 
-        ### may be set in the Cause register. You can use the andi (AND Immediate) 
-        ### instruction to clear all but the 5 least significant bits. 
-
 
 	
 	##### IS IT AN EXCEPTION OR AN INTERRUPT? #####
 	
-        bne $k1, $zero, __unhandled_exception
+        bne $k1, $zero, __unhandled_exception  #if bit 8 isn't set it's an exception.
 
 __interrupt:
+	#################################################
+	#### STEP 3 - What kind of interrupt is it? #####
+	#################################################
+	        
+        # If a receiver interrupt, the receiver interrupt pending bit (bit 8)
+        # will be set to 1 in Cause register.  
 	
+	# $k0 - holds value of the cause register. 
+	
+	### Check if bit 8 is set to 1 in Cause register. 
+
+	### TODO: Load the value at __MASK_STATUS_RECEIVER_INTERRUPT to $t0.
+	lw $t0, __MASK_STATUS_RECEIVER_INTERRUPT
+	 
+       	and $k1, $t0, $k0 	#is bit 8 set? If so, it is a receiver interrupt.
+       	
+       	# If not a receiver interrupt, jump to __unhandled_interrupt.
+       	
+       	bne $k1, $t0, __unhandled_interrupt
+
+__kbd_interrupt:
+	
+	nop # nop (NO Operation) used to make it possible to set breakpoint here. 
+	
+	# $t0 - __MASK_STATUS_RECEIVER_INTERRUPT
+	
+	# Reset Cause register, i.e., set bit 8 (receiver interrupt pending) to zero.
+	
+	not $t0, $t0
+	and $k0, $k0, $t0
+	mtc0 $k0, $13
+	
+	# step 4
+
+        lw $k1, RECEIVER_DATA 	#load receiver adress
+        
+        # Load the ASCII value from the memory-mapped receiver data 
+        # register to $a0.
+        lw $a0, ($k1)		#Load the value from the memory-mapped receiver data register.
+
+	####################################
+	##### STEP 5 - Print character #####
+	####################################
+	
+        li $v0, 11 # System call 11 (print_char)
+        syscall
+       
+       	j __restore_registers
+
+       	
+__unhandled_exception:
+	
+	# $k1 - exception code.
+	
+	li $v0, 4
+	la $a0, __unhandled_exception_msg_1
+	syscall
+	
+	li $v0, 1
+	move $a0, $k1
+	syscall
+	
+	li $v0, 4
+	la $a0, __unhandled_exception_msg_2
+	syscall
+	
+	
+__return_from_exception:
+
+   	# Skip instruction causing the exception, otherwise the same exception
+   	# will trigger again.
+
+   	mfc0 $k0, $14    # Coprocessor 0 register $14 (EPC) has address of trapping instruction.
+   	addi $k0, $k0, 4 # Add 4 to point to next instruction.
+   	mtc0 $k0, $14    # Store new address back into $14 (EPC).
+   
+   	j __restore_registers
+   
+__unhandled_interrupt:
+
+	li $v0, 4
+	la $a0, __unhandled_interrupt_msg
+	syscall
+
+
+__restore_registers:
+
+	######################################
+   	##### STEP 6 - Restore registers #####
+	######################################
+	
+	lw $v0, __v0
+	lw $a0, __a0
+	lw $a1, __a1
+	lw $t0, __t0
+	
+  	# .set noat	# SPIM - Turn of warnings for using the $at register.
+     	lw $at, __at
+        # .set at       # SPIM - Turn on warnings for using the $at register.
+
+__resume:
+	# step 7
+	eret
+
+
+       	
 # Handle the trap exception and receiver ready interrupt.
 
 # A read_string system call is initiated when a trap exception (exception code 13)
