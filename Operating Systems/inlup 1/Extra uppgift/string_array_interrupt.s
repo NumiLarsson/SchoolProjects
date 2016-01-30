@@ -1,6 +1,7 @@
-.data
+	.data
 
 INPUT_BUFFER: .space 32
+INPUT_SPACE:  .word 32
 MSG:          .asciiz "\n\nString read from user: "      
 
 RECEIVER_CONTROL: 		.word 0xffff0000
@@ -86,7 +87,12 @@ __v0:   .word 0
 __at:   .word 0
 __t0:   .word 0
 
+__MASK_STATUS_RECEIVER_INTERRUPT:	.word 0x00000100
+__READ_ARRAY_RETURN_ADRESS: 		.word 0
 
+__unhandled_interrupt_msg: 	.asciiz "Unhandled interrupt\n"
+__unhandled_exception_msg_1:  	.asciiz "Unhandled exception ("
+__unhandled_exception_msg_2:	.asciiz ")\n"
 
 
 # ---------------------------------------------------------------------------
@@ -151,6 +157,9 @@ __save_registers:
         srl $k1, $k0, 2
         andi $k1, $k1, 31 	# This could be done with andi $k1, $k0, 124 / 0x7c / 1111100 in binary 
 
+	#Is it a trap exception?
+	li $a0, 13
+	beq $a0, $k1, __trap_exception
 	
 	##### IS IT AN EXCEPTION OR AN INTERRUPT? #####
 	
@@ -201,11 +210,37 @@ __kbd_interrupt:
 	##### STEP 5 - Print character #####
 	####################################
 	
+	#print the input
         li $v0, 11 # System call 11 (print_char)
         syscall
        
-       	j __restore_registers
+       	#save the character to array.
+       	
+       	la $t0, INPUT_SIZE
+       	beq $t0, 1, __array_full
+       	j __store_char_in_array
+       	#j __restore_registers 		#This will be done in the support functions.
 
+__array_full:
+	### I'm storing the adress to program 1 in RAM, need to ask if this is a performance loss.
+	
+	
+	lw $t0, __READ_ARRAY_RETURN_ADRESS	#Return control to program 1.
+	mtc0 $t0, $14
+	
+	j __restore_registers	 		#Return control to program 1.
+
+__trap_exception:
+	
+	mfc0 $a0, $14
+	sw $t0, __READ_ARRAY_RETURN_ADRESS
+
+	li $a0, 8
+	lw $v0, __v0
+	bne $a0, $v0, __unhandled_exception
+	#If $v0 isn't 8, we can't do anything.
+	
+	
        	
 __unhandled_exception:
 	
