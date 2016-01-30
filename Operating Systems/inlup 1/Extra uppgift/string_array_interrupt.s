@@ -1,7 +1,7 @@
 	.data
 
 INPUT_BUFFER: .space 32
-INPUT_SPACE:  .word 32
+INPUT_BUFFER_SPACE:  .word 32
 MSG:          .asciiz "\n\nString read from user: "      
 
 RECEIVER_CONTROL: 		.word 0xffff0000
@@ -30,7 +30,8 @@ program_0:
         # First program_0 executes. 
 
         # Prepare system call to read string. 
-
+	lw $a0, INPUT_BUFFER_SPACE
+	lw $a1, INPUT_BUFFER
         # System call code 8 (read_string)
         li $v0, 8 
 
@@ -86,46 +87,18 @@ __a1:   .word 0
 __v0:   .word 0
 __at:   .word 0
 __t0:   .word 0
+__t1:	.word 0
 
 __MASK_STATUS_RECEIVER_INTERRUPT:	.word 0x00000100
+
+__READ_ARRAY_BUFFER_ADDRESS:		.word 0x00000000
 __READ_ARRAY_RETURN_ADRESS: 		.word 0
+__READ_ARRAY_SIZE:			.word 0
+__READ_ARRAY_CURR_SIZE:			.word 0
 
 __unhandled_interrupt_msg: 	.asciiz "Unhandled interrupt\n"
 __unhandled_exception_msg_1:  	.asciiz "Unhandled exception ("
 __unhandled_exception_msg_2:	.asciiz ")\n"
-
-
-# ---------------------------------------------------------------------------
-# EXCEPTION HANDLER
-#
-# Kernel text segment, i.e., code for the exception/interrupt handler. 
-# 
-# The term exception is commonly used to refer to both exceptions and 
-# interrupts. 
-#
-# Overall structure of the exception/interrupt handler:
-#
-# 1) Save contents in any registers (except $k0 and $k1) used by the
-#    exception handler. 
-#
-# 2) Examine the cause register to find out if the reason for entering the
-#    exception handler is an interrupt or and exception. If it is an 
-#    exception, skip the offending instruction (EPC + 4) and go to step 6.
-#
-# 3) If it is an interrupt, find out if it is a keyboard interrupt
-#    (hardware level 0). If it is not a keyboard interrupt, print a log 
-#    message and go to step 6.
-#
-# 4) If it is a keyboard interrupt, read character from memory-mapped
-#    receiver data register. 
-#
-# 5) Print the read character to the Run I/O console using the
-#    MARS built in system call print_char.
-#
-# 6) Restore the contents the registers saved in step 1. 
-#
-# 7) Resume user level execution (eret instruction). 
-# ---------------------------------------------------------------------------
 
         
         .ktext 0x80000180
@@ -145,6 +118,7 @@ __save_registers:
 	sw $a0, __a0
 	sw $a1, __a1
 	sw $t0, __t0
+	sw $t1, __t1
 
 	
 	##############################################
@@ -197,30 +171,27 @@ __kbd_interrupt:
 	not $t0, $t0
 	and $k0, $k0, $t0
 	mtc0 $k0, $13
-	
-	# step 4
 
         lw $k1, RECEIVER_DATA 	#load receiver adress
         
         # Load the ASCII value from the memory-mapped receiver data 
         # register to $a0.
         lw $a0, ($k1)		#Load the value from the memory-mapped receiver data register.
-
-	####################################
-	##### STEP 5 - Print character #####
-	####################################
 	
 	#print the input
         li $v0, 11 # System call 11 (print_char)
         syscall
        
        	#save the character to array.
+       	j __store_char_in_array 
        	
-       	la $t0, INPUT_SIZE
-       	beq $t0, 1, __array_full
-       	j __store_char_in_array
+       	#####################################################
+       	###REMOVE THIS JUMP by moving __array_full down 1.###
+       	#####################################################
+       	
        	#j __restore_registers 		#This will be done in the support functions.
 
+#Used to null terminate the array then return the control of the CPU to the caller of the syscall.
 __array_full:
 	### I'm storing the adress to program 1 in RAM, need to ask if this is a performance loss.
 	
@@ -228,18 +199,49 @@ __array_full:
 	lw $t0, __READ_ARRAY_RETURN_ADRESS	#Return control to program 1.
 	mtc0 $t0, $14
 	
-	j __restore_registers	 		#Return control to program 1.
+	#Return control to program 1.
+	
+	#not j __restore_registers
+
+#Used to store a character to the array 
+__store_char_in_array:
+
+	#store the char currently stored in $a0
+	lw $t0, __READ_ARRAY_CURR_SIZE
+	lw $t1, __READ_ARRAY_SIZE
+	
+	
+	
+	# __READ_ARRAY_CURR_SIZE++.
+	lw $t0, __READ_ARRAY_CURR_SIZE
+	addi $t0, $t0, 1
+	sw $t0, __READ_ARRAY_CURR_SIZE
+	
+	#Checks if the array is full, if so, jumps to __array_full.
+	lw $t0, __READ_ARRAY_CURR_SIZE
+       	beq $t0, 1, __array_full
+       	
+       	j __restore_registers
 
 __trap_exception:
-	
-	mfc0 $a0, $14
-	sw $t0, __READ_ARRAY_RETURN_ADRESS
 
 	li $a0, 8
 	lw $v0, __v0
 	bne $a0, $v0, __unhandled_exception
-	#If $v0 isn't 8, we can't do anything.
+	#If $v0 isn't 8, we can't do anything, if it is, continue to __read_array.
 	
+__read_array:
+	#Store necessary information
+	lw $t0, __a0
+	sw $t0, __READ_ARRAY_SIZE
+	lw $t0, __a1
+	sw $t0, __READ_ARRAY_BUFFER_ADDRESS
+	li $t0, 0
+	sw $t0, __READ_ARRAY_CURR_SIZE
+	
+	mfc0 $t0, $14
+	addi $t0, $t0, 4
+	sw $t0, __READ_ARRAY_RETURN_ADRESS
 	
        	
 __unhandled_exception:
@@ -277,12 +279,7 @@ __unhandled_interrupt:
 	syscall
 
 
-__restore_registers:
-
-	######################################
-   	##### STEP 6 - Restore registers #####
-	######################################
-	
+__restore_registers:	
 	lw $v0, __v0
 	lw $a0, __a0
 	lw $a1, __a1
@@ -293,10 +290,7 @@ __restore_registers:
         # .set at       # SPIM - Turn on warnings for using the $at register.
 
 __resume:
-	# step 7
 	eret
-
-
        	
 # Handle the trap exception and receiver ready interrupt.
 
