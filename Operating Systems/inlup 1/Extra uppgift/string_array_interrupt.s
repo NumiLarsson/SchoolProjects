@@ -67,9 +67,7 @@ program_0:
  
 program_1:
         
-        # Code for program 1 goes here. 
-         
-        # Perform some work ...
+        #Program won't do anything useful in testing.
         addi $t0, $t0, 1 
 
         # NOTE: You may try to make program_1 do something more interesting later.
