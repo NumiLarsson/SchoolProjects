@@ -34,6 +34,7 @@ program_0:
 	lw $a1, INPUT_BUFFER
         # System call code 8 (read_string)
         li $v0, 8 
+        la $v1, program_1
 
         # Address of buffer to store characters read from the keyboard. 
         la $a0, INPUT_BUFFER 
@@ -81,11 +82,20 @@ program_1:
 # What do you need to store here?
 
 __a0:   .word 0
-__a1:   .word 0
-__v0:   .word 0
-__at:   .word 0
-__t0:   .word 0
-__t1:	.word 0
+__a1:   				.word 0
+__v0:   				.word 0
+__at:   				.word 0
+__t0:   				.word 0
+__t1:					.word 0
+
+__a0_p0:   				.word 0
+__a1_p0:   				.word 0
+__v0_p0:   				.word 0
+__at_p0:   				.word 0
+__t0_p0:   				.word 0
+__t1_p0:				.word 0
+
+__ALTERNATIVE_PROGRAM_ADDRESS:		.word 0
 
 __MASK_STATUS_RECEIVER_INTERRUPT:	.word 0x00000100
 
@@ -94,10 +104,10 @@ __READ_ARRAY_RETURN_ADRESS: 		.word 0
 __READ_ARRAY_SIZE:			.word 0
 __READ_ARRAY_CURR_SIZE:			.word 0
 
-__unhandled_interrupt_msg: 	.asciiz "Unhandled interrupt\n"
-__unhandled_exception_msg_1:  	.asciiz "Unhandled exception ("
-__unhandled_exception_msg_2:	.asciiz ")\n"
-
+__unhandled_interrupt_msg: 		.asciiz "Unhandled interrupt\n"
+__unhandled_exception_msg_1:  		.asciiz "Unhandled exception ("
+__unhandled_exception_msg_2:		.asciiz ")\n"
+__trap_failed: 				.asciiz "\n\nTRAP EXCEPTION TRIGGER FAILED\n\n"
         
         .ktext 0x80000180
 
@@ -126,16 +136,26 @@ __save_registers:
 	mfc0 $k0, $13 	#move cause register ($13) to a usable register.
         
         ### Extract the exception code from the cause register (bit 2-5) to $k1.
-        srl $k1, $k0, 2
-        andi $k1, $k1, 31 	# This could be done with andi $k1, $k0, 124 / 0x7c / 1111100 in binary 
 
+	#is it an interrupt bit 8 is set.
+	lw $t0, __MASK_STATUS_RECEIVER_INTERRUPT
+	and $k1, $k0, $t0
+	
+	beq $k1, 128, __interrupt		#if $k1 is equal to 128 or 10000000 (8th bit is set)
+	
 	#Is it a trap exception?
+	srl $k1, $k0, 2
+        andi $k1, $k1, 31 	# This could be done with andi $k1, $k0, 124 / 0x7c / 1111100 in binary.
 	li $a0, 13
 	beq $a0, $k1, __trap_exception
 	
+	li $v0, 4
+	la $a0, __trap_failed
+	syscall
+	
 	##### IS IT AN EXCEPTION OR AN INTERRUPT? #####
 	
-        bne $k1, $zero, __unhandled_exception  #if bit 8 isn't set it's an exception.
+	j __unhandled_exception
 
 __interrupt:
 	#################################################
@@ -177,11 +197,11 @@ __kbd_interrupt:
         lw $a0, ($k1)		#Load the value from the memory-mapped receiver data register.
 	
 	#print the input
-        li $v0, 11 # System call 11 (print_char)
+        li $a0, 11 # System call 11 (print_char)
         syscall
        
        	#save the character to array.
-       	j __store_char_in_array 
+       	j __char_to_array_collected
        	
        	#####################################################
        	###REMOVE THIS JUMP by moving __array_full down 1.###
@@ -195,14 +215,40 @@ __array_full:
 	
 	
 	lw $t0, __READ_ARRAY_RETURN_ADRESS	#Return control to program 1.
+	addi $t0, $t0, 4
 	mtc0 $t0, $14
 	
 	#Return control to program 1.
+	#return __register_p0 to $register, 
+	#store __register value in __register_p0,
+	lw $a0, __a0_p0
+	lw $k0, __a0
+	sw $k0, __a0_p0
 	
-	#not j __restore_registers
+	lw $a1, __a1_p0
+	lw $k0, __a1
+	sw $k0, __a1_p0
+	
+	lw $v0, __v0_p0
+	lw $k0, __v0
+	sw $k0, __v0_p0
+	
+	lw $at, __at_p0
+	lw $k0, __at
+	sw $k0, __at_p0
+	
+	lw $t0, __t0_p0
+	lw $k0, __t0
+	sw $k0, __t0_p0
+	
+	lw $t1, __t1_p0
+	lw $k0, __t1
+	sw $k0, __t1_p0
+	
+	eret
 
 #Used to store a character to the array 
-__store_char_in_array:
+__char_to_array_collected:
 
 	#store the char currently stored in $a0
 	lw $t0, __READ_ARRAY_CURR_SIZE
@@ -241,6 +287,30 @@ __read_array:
 	addi $t0, $t0, 4
 	sw $t0, __READ_ARRAY_RETURN_ADRESS
 	
+	#store all __registers to __v0_p0, so that we can return to program 0 after.
+	lw $t0, __a0
+	sw $t0, __a0_p0
+	
+	lw $t0, __a1
+	sw $t0, __a1_p0
+	
+	lw $t0, __v0
+	sw $t0, __v0_p0
+	
+	lw $t0, __at
+	sw $t0, __at_p0
+	
+	lw $t0, __t0
+	sw $t0, __t0_p0
+	
+	lw $t0, __t1
+	sw $t0, __t1_p0
+	
+	#Jump to program 1.
+	#Can't be done with j program_1, because it's not in the kernel, so we have to get swifty.
+	
+	mtc0, $v1, $14
+	eret
        	
 __unhandled_exception:
 	
@@ -282,6 +352,7 @@ __restore_registers:
 	lw $a0, __a0
 	lw $a1, __a1
 	lw $t0, __t0
+	lw $t1, __t1
 	
   	# .set noat	# SPIM - Turn of warnings for using the $at register.
      	lw $at, __at
