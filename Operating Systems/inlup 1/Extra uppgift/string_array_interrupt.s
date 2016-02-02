@@ -79,8 +79,6 @@ program_1:
 
         .kdata
 
-# What do you need to store here?
-
 __a0:   .word 0
 __a1:   				.word 0
 __v0:   				.word 0
@@ -119,8 +117,8 @@ __save_registers:
 		
         # .set noat             # SPIM - Turn of warnings for using the $at register.
         move $k0, $at		# Copy value of $at to $k0.
-       	sw $k0, __at		# Save value of $at to memory.
         # .set at               # SPIM - Turn on warnings for using the $at register.
+	sw $k0, __at		# Save value of $at to memory.
 
 	sw $v0, __v0
 	sw $a0, __a0
@@ -148,12 +146,11 @@ __save_registers:
         andi $k1, $k1, 31 	# This could be done with andi $k1, $k0, 124 / 0x7c / 1111100 in binary.
 	li $a0, 13
 	beq $a0, $k1, __trap_exception
-	
+
+	#Error handeling, telling us if the checks have failed or not.
 	li $v0, 4
 	la $a0, __trap_failed
 	syscall
-	
-	##### IS IT AN EXCEPTION OR AN INTERRUPT? #####
 	
 	j __unhandled_exception
 
@@ -179,6 +176,8 @@ __interrupt:
        	bne $k1, $t0, __unhandled_interrupt
 
 __kbd_interrupt:
+
+	#$k0 - holds the value of the cause register.
 	
 	nop # nop (NO Operation) used to make it possible to set breakpoint here. 
 	
