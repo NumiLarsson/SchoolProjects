@@ -51,12 +51,12 @@ int main(int argc, char *argv[])
 	for ( i = 0; i < NUM_PLAYERS; i++ ) {
 	  //For every player, add a seedPipe and a scorePipe
 	  int tempSeedPipe[2];
-	  seedPipeArray[i] = tempSeedPipe;
 	  if ( pipe (tempSeedPipe) == -1) {
 	    perror("pipe");
 	    exit(EXIT_FAILURE);
 	  }
-	  
+	  seedPipeArray[i][0] = tempSeedPipe[0];
+	  seedPipeArray[i][0] = tempSeedPipe[1];	  
 	  
 	}
 	
