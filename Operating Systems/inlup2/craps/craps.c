@@ -47,15 +47,17 @@ int main(int argc, char *argv[])
 	//Array of pipes, size of NUM_PLAYERS
 	int seedPipeArray[NUM_PLAYERS][2];
 	int scorePipeArray[NUM_PLAYERS][2];
-
+	
 	for ( i = 0; i < NUM_PLAYERS; i++ ) {
 	  //For every player, add a seedPipe and a scorePipe
-	  int seedPipe[2];
-	  seedPipeArray[i] = seedPipe;
-	  pipe(seedPipe);
-	  int scorePipe[2];
-	  scorePipeArray[i] = scorePipe;
-	  pipe(scorePipe);
+	  int tempSeedPipe[2];
+	  seedPipeArray[i] = tempSeedPipe;
+	  if ( pipe (tempSeedPipe) == -1) {
+	    perror("pipe");
+	    exit(EXIT_FAILURE);
+	  }
+	  
+	  
 	}
 	
 	// TODO 3: initialize the communication with the players, i.e. create the pipes
