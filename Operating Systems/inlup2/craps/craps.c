@@ -69,9 +69,9 @@ int main(int argc, char *argv[])
 	  }
 	  else if ( tempint == 0) {
 	    //Child
+	    shooter (i, 0, 0); // void shooter(int pid, int seed_fd_rd, int score_fd_write);
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
 	  }
-	  
 	}
 
 
