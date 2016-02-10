@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	//         before game master exits 
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
-
+	  wait();
 	}
 
 	return 0;
