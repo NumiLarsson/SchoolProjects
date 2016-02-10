@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
 	    exit(EXIT_FAILURE);
 	  }
 	  seedPipeArray[i][0] = tempSeedPipe[0];
-	  close(seedPipeArray[i][0]);
 	  seedPipeArray[i][1] = tempSeedPipe[1];
 
 	  int tempScorePipe[2];
@@ -89,6 +88,11 @@ int main(int argc, char *argv[])
 	    shooter (i, -666, -666); // void shooter(int pid, int seed_fd_rd, int score_fd_write);
 	    //shooter (i, seedPipeArray[
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
+	  }
+	  else {
+	    //Parent
+	    close(seedPipeArray[i][0]);
+	    close(scorePipeArray[i][1]);
 	  }
 	}
 
