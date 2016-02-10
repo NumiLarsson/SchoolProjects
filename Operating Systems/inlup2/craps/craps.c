@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
 	//         - How many pipes are needed?
 	//         - Try to choose self-explanatory variable names, e.g. seedPipe, scorePipe
 
+	// TODO 3: initialize the communication with the players, i.e. create the pipes
 	//Array of pipes, size of NUM_PLAYERS
 	int seedPipeArray[NUM_PLAYERS][2];
 	int scorePipeArray[NUM_PLAYERS][2];
@@ -56,16 +57,20 @@ int main(int argc, char *argv[])
 	    exit(EXIT_FAILURE);
 	  }
 	  seedPipeArray[i][0] = tempSeedPipe[0];
-	  seedPipeArray[i][0] = tempSeedPipe[1];	  
-	  
+	  close(tempSeedPipe[i][0]);
+	  seedPipeArray[i][1] = tempSeedPipe[1];
+	  close(tempSeedPipe[i][1]);
+
+	  int tempScorePipe[2];
+	  if ( pipe (tempScorePipe) == -1) {
+	    perror("pipe");
+	    exit(EXIT_FAILURE);
+	  }
+	  scorePipeArray[i][0] = tempSeedPipe[0];
+	  scorePipeArray[i][1] = tempSeedPipe[1];
 	}
+
 	
-	// TODO 3: initialize the communication with the players, i.e. create the pipes
-
-	for (i = 0; i < NUM_PLAYERS; i++) {
-
-	}
-
 
 	// TODO 4: spawn/fork the processes that simulate the players
 	//         - check if players were successfully spawned
@@ -83,6 +88,7 @@ int main(int argc, char *argv[])
 	  else if ( tempint == 0) {
 	    //Child
 	    shooter (i, -666, -666); // void shooter(int pid, int seed_fd_rd, int score_fd_write);
+	    //shooter (i, seedPipeArray[
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
 	  }
 	}
