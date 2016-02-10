@@ -43,8 +43,10 @@ int main(int argc, char *argv[])
 	//         - Of which data type should they be?
 	//         - How many pipes are needed?
 	//         - Try to choose self-explanatory variable names, e.g. seedPipe, scorePipe
-	
 
+	
+	
+	
 	// TODO 3: initialize the communication with the players, i.e. create the pipes
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
@@ -60,6 +62,16 @@ int main(int argc, char *argv[])
 	//         - pass arguments using args and sprintf
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
+	  int tempint = fork();
+	  if ( tempint == -1) {
+	    perror("fork");
+	    exit(EXIT_FAILURE);
+	  }
+	  else if ( tempint == 0) {
+	    //Child
+	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
+	  }
+	  
 	}
 
 
