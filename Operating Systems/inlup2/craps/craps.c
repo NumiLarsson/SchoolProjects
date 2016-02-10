@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	    exit(EXIT_FAILURE);
 	  }
 	  seedPipeArray[i][0] = tempSeedPipe[0];
-	  close(tempSeedPipe[i][0]);
+	  close(seedPipeArray[i][0]);
 	  seedPipeArray[i][1] = tempSeedPipe[1];
 
 	  int tempScorePipe[2];
