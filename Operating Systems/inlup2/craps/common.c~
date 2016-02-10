@@ -119,7 +119,7 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 
 	// TODO 10: free resources and exit with success
 
-	sleep(55);
+
 	exit(EXIT_SUCCESS);
 }
 
