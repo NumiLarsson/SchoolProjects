@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
 	  seedPipeArray[i][0] = tempSeedPipe[0];
 	  close(tempSeedPipe[i][0]);
 	  seedPipeArray[i][1] = tempSeedPipe[1];
-	  close(tempSeedPipe[i][1]);
 
 	  int tempScorePipe[2];
 	  if ( pipe (tempScorePipe) == -1) {
