@@ -114,9 +114,9 @@ int main(int argc, char *argv[])
 	// TODO 9: cleanup resources and exit with success
 	//         wait for all the players/children to exit
 	//         before game master exits 
-
+	int* pExitStatus;
 	for (i = 0; i < NUM_PLAYERS; i++) {
-	  wait();
+	  wait(pExitStatus);
 	}
 
 	return 0;
