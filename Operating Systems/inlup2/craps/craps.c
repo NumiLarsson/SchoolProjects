@@ -45,11 +45,12 @@ int main(int argc, char *argv[])
 	//         - Try to choose self-explanatory variable names, e.g. seedPipe, scorePipe
 
 	//Array of pipes, size of NUM_PLAYERS
-	int seedPipeArray[NUM_PLAYERS];
-	int scorePipeArray[NUM_PLAYERS];
+	int seedPipeArray[NUM_PLAYERS][2];
+	int scorePipeArray[NUM_PLAYERS][2];
 
 	for ( i = 0; i < NUM_PLAYERS; i++ ) {
-	  //For every player, add a 
+	  //For every player, add a seedPipe and a scorePipe
+	  
 	}
 	
 	// TODO 3: initialize the communication with the players, i.e. create the pipes
@@ -119,7 +120,7 @@ int main(int argc, char *argv[])
 	// TODO 9: cleanup resources and exit with success
 	//         wait for all the players/children to exit
 	//         before game master exits 
-	int* pExitStatus;
+	int* pExitStatus = 0;
 	for (i = 0; i < NUM_PLAYERS; i++) {
 	  wait(pExitStatus);
 	}
