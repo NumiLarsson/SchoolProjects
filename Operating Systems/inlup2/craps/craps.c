@@ -44,8 +44,13 @@ int main(int argc, char *argv[])
 	//         - How many pipes are needed?
 	//         - Try to choose self-explanatory variable names, e.g. seedPipe, scorePipe
 
-	
-	
+	//Array of pipes, size of NUM_PLAYERS
+	int seedPipeArray[NUM_PLAYERS];
+	int scorePipeArray[NUM_PLAYERS];
+
+	for ( i = 0; i < NUM_PLAYERS; i++ ) {
+	  //For every player, add a 
+	}
 	
 	// TODO 3: initialize the communication with the players, i.e. create the pipes
 
