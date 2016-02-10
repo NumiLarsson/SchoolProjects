@@ -10,7 +10,7 @@
 # change to y to enable debugging support
 DEBUG=n
 
-CFLAGS=
+CFLAGS=-Wall -Wextra
 LDFLAGS=
 LDLIBS=
 
