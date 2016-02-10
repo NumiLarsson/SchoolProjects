@@ -50,7 +50,12 @@ int main(int argc, char *argv[])
 
 	for ( i = 0; i < NUM_PLAYERS; i++ ) {
 	  //For every player, add a seedPipe and a scorePipe
-	  
+	  int seedPipe[2];
+	  seedPipeArray[i] = seedPipe;
+	  pipe(seedPipe);
+	  int scorePipe[2];
+	  scorePipeArray[i] = scorePipe;
+	  pipe(scorePipe);
 	}
 	
 	// TODO 3: initialize the communication with the players, i.e. create the pipes
