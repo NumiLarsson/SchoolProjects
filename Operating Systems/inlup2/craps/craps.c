@@ -99,10 +99,12 @@ int main(int argc, char *argv[])
 
 	seed = time(NULL);
 
+	char* seedChar = 
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
-		seed++;
-		// TODO 5: send the seed to the players (write using pipes)
+	  seed++;
+	  write(seedPipeArray[i][1], &seed, 1) //1 byte is the mystery.
+	   // TODO 5: send the seed to the players (write using pipes)
 	}
 
 
