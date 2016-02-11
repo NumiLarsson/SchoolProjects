@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
 	  }
 	  else if ( tempint == 0) {
 	    //Child
-	    shooter (i, seedPipeArray[i][1], scorePipeArray[i][0]); // void shooter(int pid, int seed_fd_rd, int score_fd_write);
-	    //shooter (i, seedPipeArray[
+	    shooter (i, seedPipeArray[i][1], scorePipeArray[i][0]);
+	    // void shooter(int pid, int seed_fd_rd, int score_fd_write);
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
 	  }
 	  else {
