@@ -76,7 +76,6 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
 	  pid[i] = fork();
-	  sleep(i);
 	  if ( pid[i] == -1) {
 	    perror("fork");
 	    exit(EXIT_FAILURE);
