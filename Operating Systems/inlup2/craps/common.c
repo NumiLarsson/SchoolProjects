@@ -91,10 +91,10 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 
 
 	// TODO 6: Install SIGUSR1 handler
-	signal(SIGURS1, win_handler);
+	signal(SIGUSR1, win_handler);
 
 	// TODO 7: Install SIGUSR2 handler
-	signal(SIGURS2, end_handler);
+	signal(SIGUSR2, end_handler);
 
 	pid = getpid();
 
