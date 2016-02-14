@@ -28,7 +28,7 @@
 volatile sig_atomic_t winner = 0;
 
 // TODO 1: Change this to 0 to make the children spin in the for loop before they receive the SIGUSR2 signal
-volatile sig_atomic_t results = 1;
+volatile sig_atomic_t results = 0;
 
 
 // end_handler - handle the SIGUSR2 signal, the player will receive
@@ -40,11 +40,15 @@ volatile sig_atomic_t results = 1;
 void end_handler(int signum)
 {
   // TODO 2: Check that the signum is indeed SIGUSR2, otherwise exit with failure
+  if ( !(signum == SIGUSR2) ){
+    perror("SIGFAIL");
+    exit(EXIT_FAILURE)
+  }
 
 	
   // TODO 3: "leave the game": make the appropriate changes to let the current process exit
   //         - use the "results" flag declared earlier
-
+  results = 1;
 
   // register the signal handler for the next use
   signal (signum, end_handler);
@@ -59,11 +63,15 @@ void end_handler(int signum)
 void win_handler(int signum)
 {
   // TODO 4: Check that the signum is indeed SIGUSR1, otherwise exit with failure
-
+  if ( !(signum != SIGUSR1) ) {
+    perror("SIGFAIL");
+    exit(EXIT_FAILURE);
+  }
 
   // TODO 5: this player is the winner, make the appropriate changes upon reception of this singal
   //         - use the "results" flag declared earlier
-
+  results = 1;
+  winner = 1;
 
   // register the signal handler for the next use
   signal(signum, win_handler);
@@ -83,10 +91,10 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 
 
 	// TODO 6: Install SIGUSR1 handler
-
+	signal(SIGURS1, win_handler);
 
 	// TODO 7: Install SIGUSR2 handler
-
+	signal(SIGURS2, end_handler);
 
 	pid = getpid();
 
