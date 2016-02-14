@@ -109,9 +109,9 @@ int main(int argc, char *argv[])
 	
 	for (i = 0; i < NUM_PLAYERS; i++) {
 	  read( scorePipeArray[i][0], &results[i], sizeof(int) );
-	  if ( result[i] > maxResult ) {
+	  if ( results[i] > maxResult ) {
 	    winner = i;
-	    maxResult = result[i];
+	    maxResult = results[i];
 	  }
 	}
 
