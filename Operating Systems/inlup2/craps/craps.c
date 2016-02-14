@@ -126,8 +126,7 @@ int main(int argc, char *argv[])
 	//         - which command do you use to send signals?
 	//         - you will need the pid of the winner
 	kill( pid[winner], SIGUSR1 );
-
-	sleep(15);
+	
 	// TODO 8: signal all players the end of game
 	//         - you will need the pid of all the players
 
