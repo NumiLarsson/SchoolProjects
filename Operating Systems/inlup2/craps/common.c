@@ -40,7 +40,7 @@ volatile sig_atomic_t results = 0;
 void end_handler(int signum)
 {
   // TODO 2: Check that the signum is indeed SIGUSR2, otherwise exit with failure
-  if ( !(signum == SIGUSR2) ){
+  if ( (signum != SIGUSR2) ){
     perror("SIGFAIL_END");
     exit(EXIT_FAILURE);
   }
@@ -63,7 +63,7 @@ void end_handler(int signum)
 void win_handler(int signum)
 {
   // TODO 4: Check that the signum is indeed SIGUSR1, otherwise exit with failure
-  if ( !(signum != SIGUSR1) ) {
+  if ( (signum != SIGUSR1) ) {
     perror("SIGFAIL_WIN is the error");
     exit(EXIT_FAILURE);
   }
