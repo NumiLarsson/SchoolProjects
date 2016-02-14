@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
 
 
 	// TODO 6: read the dice results from the players via pipes, find the winner
-
+	int* pExitStatus = 0;
 	for (i = 0; i < NUM_PLAYERS; i++) {
-
+	  wait(pExitStatus);
 	}
 
 
@@ -135,9 +135,7 @@ int main(int argc, char *argv[])
 	// TODO 9: cleanup resources and exit with success
 	//         wait for all the players/children to exit
 	//         before game master exits 
-	int* pExitStatus = 0;
 	for (i = 0; i < NUM_PLAYERS; i++) {
-	  wait(pExitStatus);
 	}
 
 	return 0;
