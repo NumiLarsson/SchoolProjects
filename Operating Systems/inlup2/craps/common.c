@@ -79,8 +79,7 @@ void win_handler(int signum)
 void shooter(int id, int seed_fd_rd, int score_fd_wr)
 {
 	pid_t pid;
-	int score;
-	int* seed = 0;
+	int score, seed = 0;
 
 
 	// TODO 6: Install SIGUSR1 handler
@@ -97,7 +96,7 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 	// TODO 8: roll the dice, but before that, read a seed from the parent via pipe
 	score = read( seed_fd_rd, seed, sizeof(int) );
 	
-	srand(*seed);
+	srand(seed);
 
 	score = rand() % 10000;
 	

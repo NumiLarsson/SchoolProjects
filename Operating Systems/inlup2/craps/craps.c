@@ -28,8 +28,7 @@
 
 int main(int argc, char *argv[])
 {
-  int i;
-  int *seed;
+  int i, seed;
 
 	// TODO 1: Un-comment the following variables to use them in the 
 	//         exec system call. Using the function sprintf and the arg1 
@@ -92,11 +91,11 @@ int main(int argc, char *argv[])
 	}
 
 
-	*seed = time(NULL);
+	seed = time(NULL);
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
 	  seed++;
-	  write(seedPipeArray[i][1], seed, sizeof(int) ); //1 byte is the mystery.
+	  write(seedPipeArray[i][1], &seed, sizeof(int) ); //1 byte is the mystery.
 	   // TODO 5: send the seed to the players (write using pipes)
 	}
 
