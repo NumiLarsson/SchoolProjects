@@ -96,7 +96,7 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 	// TODO 8: roll the dice, but before that, read a seed from the parent via pipe
 	score = read( seed_fd_rd, &seed, sizeof(int) );
 
-	printf("\nSeed is: %d\n");
+	printf("\nSeed is: %d\n", seed);
 	
 	srand(seed);
 
