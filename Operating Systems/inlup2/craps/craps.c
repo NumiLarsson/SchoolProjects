@@ -52,21 +52,17 @@ int main(int argc, char *argv[])
 	
 	for ( i = 0; i < NUM_PLAYERS; i++ ) {
 	  //For every player, add a seedPipe and a scorePipe
-	  int tempSeedPipe[2];
-	  if ( pipe (tempSeedPipe) == -1) {
-	    perror("pipe");
+	  int tempPipe = pipe( seedPipeArray[i] );
+	  if ( tempPipe == -1 ) {
+	    perror("Pipe");
 	    exit(EXIT_FAILURE);
 	  }
-	  seedPipeArray[i][0] = tempSeedPipe[0];
-	  seedPipeArray[i][1] = tempSeedPipe[1];
-
-	  int tempScorePipe[2];
-	  if ( pipe (tempScorePipe) == -1) {
-	    perror("pipe");
+	  
+	  tempPipe = pipe( scorePipeArray[i] );
+	  if ( tempPipe == -1 ) {
+	    perror("Pipe");
 	    exit(EXIT_FAILURE);
 	  }
-	  scorePipeArray[i][0] = tempSeedPipe[0];
-	  scorePipeArray[i][1] = tempSeedPipe[1];
 	}
 
 	
@@ -86,7 +82,7 @@ int main(int argc, char *argv[])
 	  }
 	  else if ( tempint == 0) {
 	    //Child
-	    shooter (i, seedPipeArray[i][1], scorePipeArray[i][0]);
+	    shooter (i, seedPipeArray[i][0], scorePipeArray[i][0]);
 	    // void shooter(int pid, int seed_fd_rd, int score_fd_write);
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
 	  }
@@ -101,7 +97,7 @@ int main(int argc, char *argv[])
 	for (i = 0; i < NUM_PLAYERS; i++) {
 	  wait(15);
 	  seed++;
-	  write(seedPipeArray[i][0], seed, sizeof(int) ); //1 byte is the mystery.
+	  write(seedPipeArray[i][1], seed, sizeof(int) ); //1 byte is the mystery.
 	   // TODO 5: send the seed to the players (write using pipes)
 	}
 
