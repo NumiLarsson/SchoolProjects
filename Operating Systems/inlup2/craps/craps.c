@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	//         - you will need the pid of all the players
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
-	  kill(pid[i], SIGUSR2);
+	  kill( pid[i], SIGUSR2 );
 	}
 
 

@@ -64,7 +64,7 @@ void win_handler(int signum)
 {
   // TODO 4: Check that the signum is indeed SIGUSR1, otherwise exit with failure
   if ( !(signum != SIGUSR1) ) {
-    perror("SIGFAIL_WIN");
+    perror("SIGFAIL_WIN is the error");
     exit(EXIT_FAILURE);
   }
 
