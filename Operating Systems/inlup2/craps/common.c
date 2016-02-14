@@ -42,7 +42,7 @@ void end_handler(int signum)
   // TODO 2: Check that the signum is indeed SIGUSR2, otherwise exit with failure
   if ( !(signum == SIGUSR2) ){
     perror("SIGFAIL");
-    exit(EXIT_FAILURE)
+    exit(EXIT_FAILURE);
   }
 
 	
