@@ -93,10 +93,11 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 	fprintf(stderr, "player %d: I'm in this game (PID = %ld)\n",
 		id, (long)pid);
 
-
 	// TODO 8: roll the dice, but before that, read a seed from the parent via pipe
+	score = read( seed_fd_rd, &seed, sizeof(int) );
 
-
+	
+	
 	srand(seed);
 
 	score = rand() % 10000;
