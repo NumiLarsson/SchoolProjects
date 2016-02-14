@@ -70,7 +70,6 @@ void win_handler(int signum)
 
   // TODO 5: this player is the winner, make the appropriate changes upon reception of this singal
   //         - use the "results" flag declared earlier
-  results = 1;
   winner = 1;
 
   // register the signal handler for the next use
