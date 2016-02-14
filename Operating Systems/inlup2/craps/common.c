@@ -41,7 +41,7 @@ void end_handler(int signum)
 {
   // TODO 2: Check that the signum is indeed SIGUSR2, otherwise exit with failure
   if ( !(signum == SIGUSR2) ){
-    perror("SIGFAIL");
+    perror("SIGFAIL_END");
     exit(EXIT_FAILURE);
   }
 
@@ -64,7 +64,7 @@ void win_handler(int signum)
 {
   // TODO 4: Check that the signum is indeed SIGUSR1, otherwise exit with failure
   if ( !(signum != SIGUSR1) ) {
-    perror("SIGFAIL");
+    perror("SIGFAIL_WIN");
     exit(EXIT_FAILURE);
   }
 
