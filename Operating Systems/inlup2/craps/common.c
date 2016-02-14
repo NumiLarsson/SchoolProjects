@@ -79,7 +79,8 @@ void win_handler(int signum)
 void shooter(int id, int seed_fd_rd, int score_fd_wr)
 {
 	pid_t pid;
-	int score, seed = 0;
+	int score;
+	int* seed = 0;
 
 
 	// TODO 6: Install SIGUSR1 handler

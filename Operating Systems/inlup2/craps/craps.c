@@ -28,7 +28,8 @@
 
 int main(int argc, char *argv[])
 {
-	int i, seed;
+  int i;
+  int *seed;
 
 	// TODO 1: Un-comment the following variables to use them in the 
 	//         exec system call. Using the function sprintf and the arg1 
