@@ -112,7 +112,7 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 
 
 	// TODO 9: send my score back to the master via pipe
-
+	write( score_fd_wr, &score, sizeof(int) );
 
 	// spin while I wait for the results
 	while (!results) ;

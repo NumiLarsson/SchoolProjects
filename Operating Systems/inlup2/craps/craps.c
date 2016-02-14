@@ -28,6 +28,7 @@
 
 int main(int argc, char *argv[])
 {
+  pid_t pid[NUM_PLAYERS];
   int i, seed;
 
 	// TODO 1: Un-comment the following variables to use them in the 
@@ -74,12 +75,12 @@ int main(int argc, char *argv[])
 	//         - pass arguments using args and sprintf
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
-	  int tempint = fork();
-	  if ( tempint == -1) {
+	  pid[i] = fork();
+	  if ( pid[i] == -1) {
 	    perror("fork");
 	    exit(EXIT_FAILURE);
 	  }
-	  else if ( tempint == 0) {
+	  else if ( pid[i] == 0) {
 	    //Child
 	    shooter (i, seedPipeArray[i][0], scorePipeArray[i][1]);
 	    // void shooter(int pid, int seed_fd_rd, int score_fd_write);
@@ -101,9 +102,17 @@ int main(int argc, char *argv[])
 
 
 	// TODO 6: read the dice results from the players via pipes, find the winner
-	int* pExitStatus = 0;
+	int winner = 0;
+	int maxResult = 0;
+
+	int results[NUM_PLAYERS];
+	
 	for (i = 0; i < NUM_PLAYERS; i++) {
-	  wait(pExitStatus);
+	  read( scorePipeArray[i][0], &results[i], sizeof(int) );
+	  if ( result[i] > maxResult ) {
+	    winner = i;
+	    maxResult = result[i];
+	  }
 	}
 
 
@@ -129,8 +138,10 @@ int main(int argc, char *argv[])
 
 	// TODO 9: cleanup resources and exit with success
 	//         wait for all the players/children to exit
-	//         before game master exits 
+	//         before game master exits
+	int* pExitStatus = 0;
 	for (i = 0; i < NUM_PLAYERS; i++) {
+	  wait(pExitStatus);
 	}
 
 	return 0;
