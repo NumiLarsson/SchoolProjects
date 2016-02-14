@@ -76,13 +76,13 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < NUM_PLAYERS; i++) {
 	  pid[i] = fork();
+	  sleep(i);
 	  if ( pid[i] == -1) {
 	    perror("fork");
 	    exit(EXIT_FAILURE);
 	  }
 	  else if ( pid[i] == 0) {
 	    //Child
-	    sleep(1);
 	    shooter (i, seedPipeArray[i][0], scorePipeArray[i][1]);
 	    // void shooter(int pid, int seed_fd_rd, int score_fd_write);
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
