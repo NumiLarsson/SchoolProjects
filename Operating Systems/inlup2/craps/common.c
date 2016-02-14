@@ -114,7 +114,7 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 
 	// spin while I wait for the results
 	while (!results) ;
-
+	sleep(id);
 	if (winner)
 		fprintf(stderr, "player %d: Walking away rich\n", id);
 
