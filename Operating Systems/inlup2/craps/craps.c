@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 	//         - you will need the pid of the winner
 	kill( pid[winner], SIGUSR1 );
 	
-
+	wait(15);
 	// TODO 8: signal all players the end of game
 	//         - you will need the pid of all the players
 
