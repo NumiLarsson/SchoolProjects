@@ -92,8 +92,6 @@ int main(int argc, char *argv[])
 	  }
 	  else {
 	    //Parent
-	    close(seedPipeArray[i][0]);
-	    close(scorePipeArray[i][1]);
 	  }
 	}
 
