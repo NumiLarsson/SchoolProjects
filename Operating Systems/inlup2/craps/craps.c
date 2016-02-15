@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
 	    close( seedPipeArray[i][1] );
 	    close( scorePipeArray[i][0] );
 
-	    dup2( 0, seedPipeArray[i][0] );
-	    dup2( 1, scorePipeArray[i][1] );
+	    dup2( STDIN_FILENO, seedPipeArray[i][0] );
+	    dup2( STDOUT_FILENO, scorePipeArray[i][1] );
 
 	    sprintf( arg1, "%d", i ) ;
 	    
