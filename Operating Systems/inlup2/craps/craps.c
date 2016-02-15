@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	    dup2( 0, seedPipeArray[i][0] );
 	    dup2( 1, scorePipeArray[i][1] );
 
-	    sprintf( args1, "%d", i ) ;
+	    sprintf( arg1, "%d", i ) ;
 	    
 	    execv( arg0, args );
 	    //shooter (i, seedPipeArray[i][0], scorePipeArray[i][1]);
