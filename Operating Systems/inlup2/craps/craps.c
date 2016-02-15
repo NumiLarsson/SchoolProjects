@@ -84,12 +84,16 @@ int main(int argc, char *argv[])
 	    //Child
 	    close( seedPipeArray[i][1] );
 	    close( scorePipeArray[i][0] );
+
+	    dup2( 0, seedPipeArray[i][0] );
+	    dup2( 1, scorePipeArray[i][1] );
+	    
 	    execv( arg0, args );
 	    //shooter (i, seedPipeArray[i][0], scorePipeArray[i][1]);
 	    // void shooter(int pid, int seed_fd_rd, int score_fd_write);
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
-	    
-	    exit(EXIT_SUCCESS);
+	    perror("Child didn't exec properly!");
+	    exit(EXIT_FAILURE);
 	  }
 	  else {
 	    //Parent
