@@ -82,9 +82,12 @@ int main(int argc, char *argv[])
 	  }
 	  else if ( pid[i] == 0) {
 	    //Child
+	    close( seedPipeArray[i][1] );
+	    close( scorePipeArray[i][0] );
 	    shooter (i, seedPipeArray[i][0], scorePipeArray[i][1]);
 	    // void shooter(int pid, int seed_fd_rd, int score_fd_write);
 	    //Has to use exec to initialise ./shooter, otherwise each child creates a new child.
+	    
 	    exit(EXIT_SUCCESS);
 	  }
 	  else {
