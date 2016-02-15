@@ -26,7 +26,7 @@
 
 #include "common.h"
 
-int main(int argc, char *argv[])
+int main()
 {
   pid_t pid[NUM_PLAYERS];
   int i, seed;
