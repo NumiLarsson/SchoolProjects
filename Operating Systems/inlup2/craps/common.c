@@ -87,7 +87,8 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 {
 	pid_t pid;
 	int score, seed = 0;
-	sleep(id);
+
+	sleep(id); //Used to get writing in chronological order.
 	// TODO 6: Install SIGUSR1 handler
 	signal(SIGUSR1, win_handler);
 
@@ -114,7 +115,9 @@ void shooter(int id, int seed_fd_rd, int score_fd_wr)
 
 	// spin while I wait for the results
 	while (!results) ;
-	sleep(id);
+
+	sleep(id); //Used to get writing in chronological order.
+
 	if (winner)
 		fprintf(stderr, "player %d: Walking away rich\n", id);
 
