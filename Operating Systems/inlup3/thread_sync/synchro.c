@@ -70,7 +70,10 @@ inc_cas(void *arg __attribute__((unused)))
     /* TODO 2: Use the compare and swap primitive to manipulate the shared
      * variable */
     for (i = 0; i < INC_ITERATIONS; i++) {
-        while (! __sync_bool_compare_and_swap ( &counter, counter, (counter + INCREMENT) ) );
+        int oldval = counter;
+        while (! __sync_bool_compare_and_swap ( &counter, oldval, oldval + INCREMENT ) ){
+            oldval = counter;
+        };
         //counter += INCREMENT; // You need to replace this
     }
 
@@ -85,7 +88,10 @@ dec_cas(void *arg __attribute__((unused)))
     /* TODO 2: Use the compare and swap primitive to manipulate the shared
      * variable */
     for (i = 0; i < DEC_ITERATIONS; i++) {
-        while(! __sync_bool_compare_and_swap ( &counter, counter, (counter - DECREMENT)));
+        int oldval = counter;
+        while(! __sync_bool_compare_and_swap ( &counter, oldval, oldval - DECREMENT ) ){
+            oldval = counter;
+        };
         //counter += DECREMENT; // You need to replace this
     }
 
