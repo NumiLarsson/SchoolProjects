@@ -55,7 +55,7 @@ insert_item(int item)
     buffer.next_in = (buffer.next_in + 1) % BUFFER_SIZE;
     
     sem_post(&empty);
-    sem_post(&empty);
+    sem_post(&mutex);
 
     return 0;
 }
@@ -80,7 +80,7 @@ remove_item(int *item)
     buffer.next_out = (buffer.next_out + 1) % BUFFER_SIZE;
 
     sem_post(&full);
-    sem_post(&full);
+    sem_post(&mutex);
    
    return 0;
 }
