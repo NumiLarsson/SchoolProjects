@@ -70,49 +70,52 @@ int main(int argc, char *argv[])
 	   pid[i] = fork();
 	  
 	  if (pid[i]==-1){
-	    printf("Fork error!"); 
+	    perror("Fork error!"); 
 	    exit(EXIT_FAILURE);
 	  }
 	  else if(pid[i]==0){
 	    close(seedPipe[i][1]);
 	    close(scorePipe[i][0]);
-
+	  
+  
 	    dup2(seedPipe[i][0],STDIN_FILENO);
 	    dup2(scorePipe[i][1],STDOUT_FILENO);
 	    sprintf(arg1,"%d",i);
 	    execve(args[0],args,NULL);
- 
-  
- }
-	  
-	}	  
-	
-seed = time(NULL);
+	    
+	  }
 
 
-	for (i = 0; i < NUM_PLAYERS; i++) {
-		seed++;
-		// TODO 5: send the seed to the players (write using pipes)
-		write(seedPipe[i][1],&seed,sizeof(int));
-		close(seedPipe[i][1]);
+
+	    
+
 	}
+	seed = time(NULL);
+	
+	
+	for (i = 0; i < NUM_PLAYERS; i++) {
+	  seed++;
+	  // TODO 5: send the seed to the players (write using pipes)
+	    write(seedPipe[i][1],&seed,sizeof(int));
+	    close(seedPipe[i][1]);
+	  }
 
 
 	// TODO 6: read the dice results from the players via pipes, find the winner
-	int maxScore = 0;
-	int tempScore = 0;
+	  int maxScore = 0;
+	  int tempScore = 0;
+	  
+	  for (i = 0; i < NUM_PLAYERS; i++) {
+	    read(scorePipe[i][0],&tempScore,sizeof(int));
+	    close(scorePipe[i][0]);
 
-	for (i = 0; i < NUM_PLAYERS; i++) {
-	  read(scorePipe[i][0],&tempScore,sizeof(int));
-	  close(scorePipe[i][0]);
-
-	  if (tempScore > maxScore){
-	    maxScore = tempScore;
-	    winner =i;
+	    if (tempScore > maxScore){
+	      maxScore = tempScore;
+	      winner =i;
+	    }
+	    
 	  }
-
-	}
-
+	  
 
 	printf("master: player %d WINS\n", winner);
 
@@ -144,8 +147,9 @@ seed = time(NULL);
 	 
 	  wait(&status);
 	  exit(EXIT_SUCCESS);
-
- }
+	  
+	}
 	
 	return 0;
-}
+	}
+	
