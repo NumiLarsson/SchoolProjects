@@ -37,12 +37,12 @@ void *
 inc_mutex(void *arg __attribute__((unused)))
 {
     int i;
-    pthread_mutex_lock (i);
+    pthread_mutex_lock( mutex );
     /* TODO 1: Protect access to the shared variable */
     for (i = 0; i < INC_ITERATIONS; i++) {
         counter += INCREMENT;
     }
-    pthread_mutex_unlock (i);
+    pthread_mutex_unlock( mutex );
     return NULL;
 }
 
@@ -50,12 +50,12 @@ void *
 dec_mutex(void *arg __attribute__((unused)))
 {
     int i;
-    pthread_mutex_lock (i);
+    pthread_mutex_lock( mutex );
     /* TODO 1: Protect access to the shared variable */
     for (i = 0; i < DEC_ITERATIONS; i++) {
         counter -= DECREMENT;
     }
-    pthread_mutex_unlock (i);
+    pthread_mutex_unlock( mutex );
     return NULL;
 }
 
