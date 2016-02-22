@@ -30,6 +30,10 @@ typedef struct {
 
 buffer_t buffer;
 
+sem_t full;
+sem_t empty;
+sem_t mutex;
+
 pthread_t consumer_tid[CONSUMERS], producer_tid[PRODUCERS];
 
 /* *
@@ -43,11 +47,15 @@ insert_item(int item)
     /* TODO: Check and wait if the buffer is full. Ensure exclusive
      * access to the buffer and use the existing code to remove an item.
      */
-
+    
+    sem_wait(&full);
+    sem_wait(&mutex);
 
     buffer.value[buffer.next_in] = item;
     buffer.next_in = (buffer.next_in + 1) % BUFFER_SIZE;
-
+    
+    sem_post(&empty);
+    sem_post(&empty);
 
     return 0;
 }
@@ -64,12 +72,17 @@ remove_item(int *item)
      * access to the buffer and use the existing code to remove an item.
      */
 
+    sem_wait(&empty);
+    sem_wait(&mutex);
 
     *item = buffer.value[buffer.next_out];
     buffer.value[buffer.next_out] = -1;
     buffer.next_out = (buffer.next_out + 1) % BUFFER_SIZE;
 
-    return 0;
+    sem_post(&full);
+    sem_post(&full);
+   
+   return 0;
 }
 
 /**
@@ -158,7 +171,6 @@ main()
 	    perror("pthread_join");
 	    abort();
 	}
-
 
     return 0;
 }
