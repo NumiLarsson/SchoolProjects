@@ -48,13 +48,13 @@ insert_item(int item)
      * access to the buffer and use the existing code to remove an item.
      */
     
-    sem_wait(&full);
+    sem_wait(&empty);
     sem_wait(&mutex);
 
     buffer.value[buffer.next_in] = item;
     buffer.next_in = (buffer.next_in + 1) % BUFFER_SIZE;
     
-    sem_post(&empty);
+    sem_post(&full);
     sem_post(&mutex);
 
     return 0;
@@ -72,14 +72,14 @@ remove_item(int *item)
      * access to the buffer and use the existing code to remove an item.
      */
 
-    sem_wait(&empty);
+    sem_wait(&full);
     sem_wait(&mutex);
 
     *item = buffer.value[buffer.next_out];
     buffer.value[buffer.next_out] = -1;
     buffer.next_out = (buffer.next_out + 1) % BUFFER_SIZE;
 
-    sem_post(&full);
+    sem_post(&empty);
     sem_post(&mutex);
    
    return 0;
