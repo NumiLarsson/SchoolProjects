@@ -146,6 +146,10 @@ main()
     long int i;
 
     srand(time(NULL));
+    
+    sem_init(&mutex,0,1);
+    sem_init(&empty,0,BUFFER_SIZE);
+    sem_init(&full,0,0);
 
     /* Create the consumer threads */
     for (i = 0; i < CONSUMERS; i++)
