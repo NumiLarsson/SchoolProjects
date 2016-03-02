@@ -101,7 +101,7 @@ producer(void *param)
     printf("producer started\n");
     i = PRODUCER_ITERATIONS;
     while (i--) {
-	sleep(rand() % 3);
+	//sleep(rand() % 3);
 
 	item = rand() % 10000;
 	if (insert_item(item))
