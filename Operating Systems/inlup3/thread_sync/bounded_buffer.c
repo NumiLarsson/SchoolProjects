@@ -15,7 +15,7 @@
 
 #define BUFFER_SIZE 5
 
-#define PRODUCERS 2
+#define PRODUCERS 4
 #define CONSUMERS 4
 
 #define ITERATIONS 20

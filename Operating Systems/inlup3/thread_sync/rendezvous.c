@@ -29,7 +29,7 @@ semphore_t* init(int n) {
     *S = n;
     return S;
 }
-void wait(semphore_t *S) {
+void fix_wait(semphore_t *S) {
     int oldvalue = *S;
     while (oldvalue <= 0){
         oldvalue = *S;
@@ -56,7 +56,7 @@ threadA(void *param __attribute__((unused)))
 	printf("threadA --> %d iteration\n", i);
 	sleep(rand() % MAX_SLEEP_TIME);
         signal(semphoreA);
-        wait(semphoreB);
+        fix_wait(semphoreB);
     }
 
     pthread_exit(0);
@@ -70,7 +70,7 @@ threadB(void *param  __attribute__((unused)))
 
     for (i = 0; i < LOOPS; i++) {
 
-        wait(semphoreA);
+        fix_wait(semphoreA);
 	printf("threadB --> %d iteration\n", i);
 	sleep(rand() % MAX_SLEEP_TIME);
         
