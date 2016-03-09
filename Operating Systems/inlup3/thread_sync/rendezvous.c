@@ -14,7 +14,7 @@
 #include <semaphore.h> /* sem_...() */
 #include <pthread.h>   /* pthread_...() */
 
-#define LOOPS 50
+#define LOOPS 4
 #define NTHREADS 3
 #define MAX_SLEEP_TIME 1
 
