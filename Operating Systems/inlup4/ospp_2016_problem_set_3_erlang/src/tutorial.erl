@@ -104,7 +104,7 @@ fac_tr(N, Acc) ->
 fib_tr(N) ->
     fib_tr(N, 0,1).
 
-fib_tr(0, Xi, Xii) -> 
+fib_tr(0, Xi, _) -> 
     Xi;
 fib_tr(Iter, Xi, Xii) -> 
     fib_tr(Iter-1, Xii, Xi+Xii). 
@@ -130,7 +130,8 @@ fib_tr(Iter, Xi, Xii) ->
 
 right_triangles(N) ->
     L = lists:seq(1, N),
-    
+    [{A,B,C} || A <- L, B <- L, C <- L, A*A+B*B==C*C].
+   
 
 %% @doc Returns a list of tuples, where each tuple describes a caracter in the Simposon family.
 %%
@@ -310,8 +311,8 @@ count(String, Char) ->
     F = 
 	fun(StringChar, AccIn) -> 
 		if 
-		    (StringChar == Char) ->
-			AccIn + 1;
+		    (StringChar == Char) -> 
+		        AccIn + 1;
 		    true ->
 			AccIn
 		end
@@ -341,5 +342,3 @@ odd_and_even(List) ->
     
     lists:foldl(F, {{odd, []}, {even, []}}, List).
     
-
-
