@@ -279,9 +279,19 @@ str_to_lower(String) ->
       L::[integer()],
       M::integer().
 
-max([H | T]) ->
-    F = fun(H, T) -> if (T > H) -> T end,
-    lists:foldl(F, H, T).
+
+max(List) ->
+    F = 
+	fun(H, CurrMax) -> 
+		if 
+		    (CurrMax > H) -> 
+			CurrMax;
+		    true ->
+			H
+		end
+	end,
+    lists:foldl(F, 0, List).
+
 		       
 
 %% @doc Returns the number of times Char occurs in String.
@@ -297,7 +307,15 @@ max([H | T]) ->
       
 count(String, Char) ->
 
-    F = tbi,
+    F = 
+	fun(StringChar, AccIn) -> 
+		if 
+		    (StringChar == Char) -> 
+		        AccIn + 1;
+		    true ->
+			AccIn
+		end
+	end,			    
     
     lists:foldl(F, 0, String).
 
