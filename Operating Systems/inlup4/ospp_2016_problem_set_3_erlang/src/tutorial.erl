@@ -130,7 +130,7 @@ fib_tr(Iter, Xi, Xii) ->
 
 right_triangles(N) ->
     L = lists:seq(1, N),
-    tbi.
+    
 
 %% @doc Returns a list of tuples, where each tuple describes a caracter in the Simposon family.
 %%
@@ -310,8 +310,8 @@ count(String, Char) ->
     F = 
 	fun(StringChar, AccIn) -> 
 		if 
-		    (StringChar == Char) -> 
-		        AccIn + 1;
+		    (StringChar == Char) ->
+			AccIn + 1;
 		    true ->
 			AccIn
 		end
