@@ -23,7 +23,18 @@ hello() ->
 %%%%%%%%%%  Recursive functions %%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% @doc TODO: add description here
+%% @doc Prints "*N* Hello!" to the terminal *N* times.
+%% === Example ===
+%% <div class="example">```
+%% 25> N = 5.
+%% 26> tutorial:hello(N).
+%% 5 Hello!
+%% 4 Hello!
+%% 3 Hello!
+%% 2 Hello!
+%% 1 Hello!
+%% ok
+%% '''</div>
 -spec hello(N::integer()) -> ok.
 
 hello(0) ->
@@ -67,8 +78,9 @@ fib(0) ->
     0;
 fib(1) -> 
     1;
-fib(N) when N > 0 -> 
-    tbi.
+fib(N) when N > 0 ->
+    fib(N-1) + fib(N-2).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Tail Recursive functions %%%%%%%%%%
@@ -83,7 +95,7 @@ fac_tr(N) ->
 fac_tr(0, Acc) -> 
     Acc;
 fac_tr(N, Acc) ->
-    tbi.
+    fac_tr(N-1, Acc*N).
 
 %% @doc Calculates the Nth fibonacci number, implemented using tail
 %% recursion.
@@ -92,10 +104,10 @@ fac_tr(N, Acc) ->
 fib_tr(N) ->
     fib_tr(N, 0,1).
 
-fib_tr(0, Xi, Xii) -> 
-    tbi;
+fib_tr(0, Xi, _) -> 
+    Xi;
 fib_tr(Iter, Xi, Xii) -> 
-    tbi.
+    fib_tr(Iter-1, Xii, Xi+Xii). 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -118,7 +130,8 @@ fib_tr(Iter, Xi, Xii) ->
 
 right_triangles(N) ->
     L = lists:seq(1, N),
-    tbi.
+    [{A,B,C} || A <- L, B <- L, C <- L, A*A+B*B==C*C].
+   
 
 %% @doc Returns a list of tuples, where each tuple describes a caracter in the Simposon family.
 %%
@@ -168,13 +181,19 @@ simpsons() ->
       Name::string().
 
 simpsons(names) ->
-    tbi;
+    [ N || {_, _, N} <- simpsons() ];
 simpsons(males) ->
-    tbi;
+    [ N || {_, male, N} <- simpsons() ];
 simpsons(females) ->
-    tbi;
+    [ N || {_, female, N} <- simpsons() ];
 simpsons(pets) ->
-    tbi.
+    DogList = [ N || {dog, _, N} <- simpsons() ],
+    CatList = [ N || {cat, _, N} <- simpsons() ],
+    PigList = [ N || {pig, _, N} <- simpsons() ],
+    DogCatList = CatList ++ DogList,
+    DogCatList ++ PigList.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Guarded Functions  %%%%%%%%%%
@@ -190,8 +209,11 @@ simpsons(pets) ->
 %% </div>
 -spec char_to_upper(char()) -> char().
 
-char_to_upper(Char) when true->
-    tbi.
+char_to_upper(Char) when Char >= 97, Char =< 122 ->
+    Char -32;
+char_to_upper(Char) ->
+    Char.
+
 
 %% @doc Convert a character to lower case.
 %% === Example ===
@@ -203,8 +225,11 @@ char_to_upper(Char) when true->
 %% </div>
 -spec char_to_lower(char()) -> char().
 
-char_to_lower(Char) when true ->
-    tbi.
+char_to_lower(Char) when Char >= 65, Char =< 90 ->
+    Char +32;
+char_to_lower(Char) ->
+    Char.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Map  %%%%%%%%%%
@@ -220,9 +245,10 @@ char_to_lower(Char) when true ->
 %% </div>
 -spec str_to_upper(string()) -> string().
 
-str_to_upper(String) ->
-    tbi.
-
+str_to_upper([Head]) -> 
+    [char_to_upper(Head)|[]];
+str_to_upper([Head|Tail]) ->
+    [char_to_upper(Head) | str_to_upper(Tail)].
 
 %% @doc Convert a string to lower case. 
 %% === Example ===
@@ -232,8 +258,13 @@ str_to_upper(String) ->
 %% </div>
 -spec str_to_lower(string()) -> string().
 
-str_to_lower(String) ->
-    tbi.
+str_to_lower([String]) ->
+    [ char_to_lower(String) | [] ];
+str_to_lower([Head|Tail]) ->
+    [ char_to_lower(Head) | str_to_lower(Tail)];
+str_to_lower(String) -> 
+    [ str_to_lower( String ) | [] ].
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Fold %%%%%%%%%%
@@ -249,9 +280,19 @@ str_to_lower(String) ->
       L::[integer()],
       M::integer().
 
-max([H | T]) ->
-    F = tbi,
-    lists:foldl(F, H, T).
+
+max(List) ->
+    F = 
+	fun(H, CurrMax) -> 
+		if 
+		    (CurrMax > H) -> 
+			CurrMax;
+		    true ->
+			H
+		end
+	end,
+    lists:foldl(F, 0, List).
+
 		       
 
 %% @doc Returns the number of times Char occurs in String.
@@ -267,7 +308,15 @@ max([H | T]) ->
       
 count(String, Char) ->
 
-    F = tbi,
+    F = 
+	fun(StringChar, AccIn) -> 
+		if 
+		    (StringChar == Char) -> 
+		        AccIn + 1;
+		    true ->
+			AccIn
+		end
+	end,			    
     
     lists:foldl(F, 0, String).
 
@@ -293,5 +342,3 @@ odd_and_even(List) ->
     
     lists:foldl(F, {{odd, []}, {even, []}}, List).
     
-
-

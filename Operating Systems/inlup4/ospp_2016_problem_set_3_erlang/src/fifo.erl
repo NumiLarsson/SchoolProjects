@@ -16,26 +16,28 @@
 
 new() -> {fifo, [], []}.
  
-%% @doc TODO Add a description
+%% @doc Size of fifo queue.
 -spec size(Fifo) -> integer() when
       Fifo::fifo().
 
 size({fifo, In, Out}) ->
     length(In) + length(Out).
 
-%% @doc TODO Add a description
-%% TODO: add a -spec type declaration
-
+%% @doc Pushes a integer to the last position in the queue.
+-spec push(Fifo, Value) -> Fifo when 
+      Fifo::fifo(),
+      Value::integer().
 %% To make it fast to push new values, add a new value to the head of
 %% In.
 
 push({fifo, In, Out}, X) -> 
-    tbi.
+    {fifo, [X|In], Out}.
 
-%% @doc TODO Add a description
+%% @doc Removes the first element in a queue
 %% @throws 'empty fifo'
-%% TODO: add a -spec type declaration
-
+-spec pop(Fifo) -> {Value, Fifo} when
+      Fifo::fifo(),
+      Value::integer().
 %% pop should return {Value, NewFifo}
 
 pop({fifo, [], []}) -> 
@@ -44,17 +46,18 @@ pop({fifo, [], []}) ->
 %% To make pop fast we want to pop of the head of the Out list.
     
 pop({fifo, In, [H|T]}) -> 
-    tbi;
+    {H, {fifo, In, T}};
 
 %% When Out is empty, we must take a performance penalty. Use the
 %% reverse of In s the new Out and an empty lists as the new In, then
 %% pop as usual.
 
 pop({fifo, In, []}) ->
-    tbi.
+    [NewHead|NewTail] = lists:reverse(In),
+    {NewHead, {fifo, [], NewTail}}.
 
 
-%% @doc TODO Add a description
+%% @doc Returns true if Fifo is empty.
 -spec empty(Fifo) -> boolean() when Fifo::fifo().
 
 empty({fifo, [], []}) ->
