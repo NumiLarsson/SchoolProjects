@@ -1,6 +1,8 @@
 %% @doc Erlang mini project.
 -module(add).
--export([start/3, start/4, actor_manager/5, create_actors/5, calc_worker/5]).
+-export([start/3, start/4, actor_manager/5, 
+        create_actors/5, calc_worker/5,
+        make_lists_listener/4]).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Split converts all the numbers from decimal to their own base.
@@ -28,12 +30,12 @@ split (A, Base) ->
   Result::integer(),
   CarryOut::integer().
 
-calc_worker (A, B, CarryIn, _Base, Index) ->
+calc_worker (A, B, CarryIn, Base, Index) ->
   PreResult = A + B + CarryIn,
-  CarryOut = PreResult div 2,
+  CarryOut = PreResult div Base,
   if 
     CarryOut == 1 ->
-      Result = PreResult - 2;
+      Result = PreResult - Base;
     true ->
       Result = PreResult
   end,
@@ -104,13 +106,45 @@ actor_manager (A, B, Base, Parent, SpeculativeWorking) ->
       %%Speculative working is enabled
       tbi;
     true ->
-      PIDList = create_actors(A, B, Base, 0, 0),
-      fan_out_PID(Parent, PIDList)
+      PIDList = create_actors(A, B, 0, Base, 0),
+      List_Manager_PID = spawn(
+        add,
+        make_lists_listener,
+        [PIDList, [], [], Parent]),
+      fan_out_PID(List_Manager_PID, PIDList)
   end.
-      
 
--spec make_lists_listener(List, Parent, )
+-spec put_list_index(Object, List, Index) -> List when
+  Object::integer(),
+  List::[integer],
+  Index::integer().
 
+put_list_index(Object, List, 0) ->
+  List ++ [Object];
+
+put_list_index(Object, [_|Tail], 0) -> 
+  [Object|Tail];
+
+put_list_index(Object, [ Head | Tail], Index) ->
+  [Head | put_list_index(Object, Tail, (Index - 1) )].
+
+-spec make_lists_listener(PIDList, WorkList, CarryList, Parent) -> WorkList when
+  PIDList::[integer],
+  WorkList::[integer],
+  CarryList::[integer],
+  Parent::integer().
+
+make_lists_listener([], WorkList, CarryList, Parent) -> 
+  Parent ! {WorkList, CarryList};
+
+make_lists_listener([_|Tail], ResultList, CarryList, Parent) -> 
+  receive
+    {Index, {Result, CarryOut}} ->
+      make_lists_listener(Tail, 
+                          put_list_index(Result, ResultList, Index),
+                          put_list_index(CarryOut, CarryList, Index),
+                          Parent)
+  end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -spec start(A, B, Base) -> Result when
@@ -124,17 +158,17 @@ start(A,B, Base) ->
     %% Split numbers to create pairs at most.
     %% Create extra 0s in front of the shorter number if necessary.
     %% create a list for all the 
-    AList = lists:reverse(split (A, Base)), 
-    BList = lists:reverse(split (B, Base)),
-    SpeculativeWorking = 0, %% off.
+    AList = split (A, Base), 
+    BList = split (B, Base),
+    SpeculativeWorking = 0, %% 1 is on.
     spawn(
       add, 
       actor_manager, 
       [AList, BList, Base, self(), SpeculativeWorking]
       ),
     receive
-      X ->
-        X
+      {X, Y} ->
+        {lists:reverse(X), lists:reverse(Y)}
         %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
         %%                          f  /  e /  d /  c /  b /  a
         %%Print (Carries),
