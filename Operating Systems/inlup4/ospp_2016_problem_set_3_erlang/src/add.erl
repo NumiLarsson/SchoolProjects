@@ -168,7 +168,7 @@ start(A,B, Base) ->
       ),
     receive
       {X, Y} ->
-        {lists:reverse(X), lists:reverse(Y)}
+        [lists:reverse(X),AList, BList, lists:reverse(Y)]
         %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
         %%                          f  /  e /  d /  c /  b /  a
         %%Print (Carries),
