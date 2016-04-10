@@ -1,8 +1,6 @@
 %% @doc Erlang mini project.
 -module(add).
--export([start/3, start/4, actor_manager/5, 
-        create_actors/5, calc_worker/5,
-        make_lists_listener/4]).
+-export([start/3, start/4]).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Split converts all the numbers from decimal to their own base.
@@ -21,130 +19,47 @@ split (A, Base) ->
   Result = A rem Base,
   [Result | split (Rest, Base)].
 
--spec calc_worker (A, B, CarryIn, Base, Index) -> {Index, {Result, CarryOut}} when
+%% @doc calc_carry_out simply takes a number and calculates the carry out it'll have.
+
+-spec calc_carry_out(Number, Base) -> {Result, Carry} when
+  Number::integer(),
+  Base::integer(),
+  Result::integer(),
+  Carry::integer().
+
+calc_carry_out(Number, Base) ->
+  Result = Number rem Base,
+  Carry = Number div Base,
+  {Result, Carry}.
+
+%% @doc calc_worker is an actor that calculates a simple addition, receiving the carryin 
+%% through a message from the process that want's the return.
+
+-spec calc_worker (A, B, Base, Index) -> {Index, {Result, CarryOut}} when
   A::integer(),
   B::integer(),
   Base::integer(),
-  CarryIn::integer(),
   Index::integer(),
   Result::integer(),
   CarryOut::integer().
 
-calc_worker (A, B, CarryIn, Base, Index) ->
-  PreResult = A + B + CarryIn,
-  CarryOut = PreResult div Base,
-  if 
-    CarryOut == 1 ->
-      Result = PreResult - Base;
-    true ->
-      Result = PreResult
-  end,
+calc_worker (A, B, Base, Index) ->
+  ResCarryIn1 = A + B + 1,
+  ResCarryIn0 = A + B, %% + 0,
+
+  {Result1, CarryOut1} = calc_carry_out(ResCarryIn1, Base),
+  {Result0, CarryOut0} = calc_carry_out(ResCarryIn0, Base),
+
   receive 
-    From ->
-      From ! {Index, {Result, CarryOut}}
+    {From, 1} ->
+      From ! {Index, {Result1, CarryOut1}};
+    {From, 0} ->
+      From ! {Index, {Result0, CarryOut0}}
   end.
 
 
--spec create_actors (A, B, Carry, Base, Index) -> PIDList when
-  A::[integer],
-  B::[integer],
-  Carry::integer(),
-  Base::integer(),
-  Index::integer(),
-  PIDList::[integer].
-
-create_actors ([], [], _Carry, _Base, _Index) ->
-  [];
-
-create_actors ([ HeadA | TailA ], [], Carry, Base, Index) -> 
-  [spawn(
-        add, 
-        calc_worker, 
-        [HeadA, 0, Carry, Base, Index]
-        ) |
-  create_actors(TailA, [], Carry, Base, (Index+1))];
 
 
-create_actors ([], [HeadB|TailB], Carry, Base, Index) -> 
-  [spawn(
-        add, 
-        calc_worker, 
-        [0, HeadB, Carry, Base, Index]
-        ) |
-  create_actors([], TailB, Carry, Base, (Index+1)) ];
- 
-create_actors ([HeadA|TailA], [HeadB|TailB], Carry, Base, Index) ->
-  [spawn(
-        add, 
-        calc_worker, 
-        [HeadA, HeadB, Carry, Base, Index]
-        ) |
-  create_actors(TailA, TailB, Carry, Base, (Index+1)) ].
-
--spec fan_out_PID (PID, PIDList) -> ok when
-  PID::integer(),
-  PIDList::(integer).
-
-fan_out_PID (_, []) ->
-  ok;
-
-fan_out_PID (PID, [Head | Tail]) ->
-  Head ! PID,
-  fan_out_PID(PID, Tail).
-
--spec actor_manager (A, B, Base, Parent, SpeculativeWorking) -> ok when
-  A::[integer],
-  B::[integer],
-  Base::integer(),
-  Parent::integer(),
-  SpeculativeWorking::integer().
-  %%SpeculativeWorking is either 0 (saying no speculations) or 1.
-
-actor_manager (A, B, Base, Parent, SpeculativeWorking) ->
-  if 
-    SpeculativeWorking == 1 ->
-      %%Speculative working is enabled
-      tbi;
-    true ->
-      PIDList = create_actors(A, B, 0, Base, 0),
-      List_Manager_PID = spawn(
-        add,
-        make_lists_listener,
-        [PIDList, [], [], Parent]),
-      fan_out_PID(List_Manager_PID, PIDList)
-  end.
-
--spec put_list_index(Object, List, Index) -> List when
-  Object::integer(),
-  List::[integer],
-  Index::integer().
-
-put_list_index(Object, List, 0) ->
-  List ++ [Object];
-
-put_list_index(Object, [_|Tail], 0) -> 
-  [Object|Tail];
-
-put_list_index(Object, [ Head | Tail], Index) ->
-  [Head | put_list_index(Object, Tail, (Index - 1) )].
-
--spec make_lists_listener(PIDList, WorkList, CarryList, Parent) -> WorkList when
-  PIDList::[integer],
-  WorkList::[integer],
-  CarryList::[integer],
-  Parent::integer().
-
-make_lists_listener([], WorkList, CarryList, Parent) -> 
-  Parent ! {WorkList, CarryList};
-
-make_lists_listener([_|Tail], ResultList, CarryList, Parent) -> 
-  receive
-    {Index, {Result, CarryOut}} ->
-      make_lists_listener(Tail, 
-                          put_list_index(Result, ResultList, Index),
-                          put_list_index(CarryOut, CarryList, Index),
-                          Parent)
-  end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -spec start(A, B, Base) -> Result when
@@ -160,15 +75,15 @@ start(A,B, Base) ->
     %% create a list for all the 
     AList = split (A, Base), 
     BList = split (B, Base),
-    SpeculativeWorking = 0, %% 1 is on.
-    spawn(
-      add, 
-      actor_manager, 
-      [AList, BList, Base, self(), SpeculativeWorking]
-      ),
+
     receive
-      {X, Y} ->
-        [lists:reverse(X),lists:reverse(AList), lists:reverse(BList), lists:reverse(Y)]
+      {Results, Carries} ->
+        [
+          lists:reverse(Results),
+          lists:reverse(AList), 
+          lists:reverse(BList), 
+          lists:reverse(Carries)
+        ]
         %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
         %%                          f  /  e /  d /  c /  b /  a
         %%Print (Carries),
