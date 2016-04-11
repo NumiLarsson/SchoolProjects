@@ -9,7 +9,7 @@
 -spec split (A, Base) -> List when
   A::integer(),
   Base::integer(),
-  List::[integer].
+  List::[integer()].
 
 split (0, _) ->
   [];
@@ -20,9 +20,12 @@ split (A, Base) ->
   [Result | split (Rest, Base)].
 
 
-
+%% @doc insert_at inserts Object at position Index at list, moving the list instead of replacing.
+%% Primarily used to make sure the result from our workers are in the correct order,
+%% something which they generally do anyway since they'll all be running on the same OSthread, but
+%% just in case.
 -spec insert_at(List, Object, Index) -> List when
-  List::[],
+  List::[integer()],
   Object::integer(),
   Index::integer().
 
@@ -36,16 +39,17 @@ insert_at([H|T], Object, Index) ->
   [H] ++ insert_at(T, Object, Index - 1).
 
 
-
+%% @doc combine_result is the "listener" in this program, simply listens to messages and enters
+%% them in the correct order (using insert_at), in the correct list.
 -spec combine_results(ResultList, CarryList, Owner) -> 
     {ResultList, CarryList} when
-  ResultList::[interger],
-  CarryList::[interger],
+  ResultList::[integer()],
+  CarryList::[integer()],
   Owner::integer().
 
 combine_results(ResultList, CarryList, Owner) ->
   receive
-    {Index, {Result, Carry}} -> 
+    {Index, {Result, Carry}} ->
       NewResult = insert_at(ResultList, Result, Index), %%[Result | ResultList], 
       NewCarryList = insert_at(CarryList, Carry, Index), %%[Carry | CarryList], %%
       combine_results(NewResult, NewCarryList, Owner)
@@ -53,11 +57,12 @@ combine_results(ResultList, CarryList, Owner) ->
       Owner ! {ResultList, CarryList}
   end.
 
-
+%% @doc Used to "Fan Out" to all the workers, sending them the correct carries and receiving 
+%% the correct input, then sends that output to combine_results
 -spec send_carry(Combinator, WorkerPIDList, Carry) -> ok when
   Combinator::integer(),
-  WorkerPIDList::[integer],
-  Carry::integer.
+  WorkerPIDList::[integer()],
+  Carry::integer().
 
 send_carry(_Combinator, [], _Carry) -> 
   ok;
@@ -72,21 +77,26 @@ send_carry(Combinator, [Worker|TailWorkers], Carry) ->
       exit(success)
   end.
 
+%% @doc The process responsible for spawning the right amount of workers and giving them the
+%% correct info to calculate, returns a list containing all the worker PIDs. /3 simply moves it
+%% to /4
 -spec spawn_calc_workers(A, B, Base) -> WorkerPIDList when
-  A::[integer],
-  B::[integer],
+  A::[integer()],
+  B::[integer()],
   Base::integer(),
-  WorkerPIDList::[integer].
+  WorkerPIDList::[integer()].
 
 spawn_calc_workers(A, B, Base) -> 
   spawn_calc_workers(A, B, Base, 0).
 
+%% @doc The process responsible for spawning the right amount of workers and giving them the
+%% correct info to calculate, returns a list containing all the worker PIDs.
 -spec spawn_calc_workers(A, B, Base, Index) -> WorkerPIDList when
-  A::[integer],
-  B::[integer],
+  A::[integer()],
+  B::[integer()],
   Base::integer(),
   Index::integer(),
-  WorkerPIDList::[integer].
+  WorkerPIDList::[integer()].
 
 spawn_calc_workers([], [], Base, Index) ->
   [spawn(calc, calc_worker_spec, [0, 0, Base, Index])];
@@ -100,25 +110,20 @@ spawn_calc_workers([HA|TA], [HB|TB], Base, Index) ->
   [spawn(calc, calc_worker_spec, [HA, HB, Base, Index]) 
   | spawn_calc_workers(TA, TB, Base, Index + 1)].
 
-
+%% @doc The "Parent" of all the workers, the process responsible for the calculation and 
+%% concurrent part of this program.
 -spec manage_calc_workers(A, B, Base, Parent) -> {Result, CarryList} when
-  A::[integer],
-  B::[integer],
+  A::[integer()],
+  B::[integer()],
   Base::integer(),
   Parent::integer(),
-  Result::[integer],
-  CarryList::[integer].
+  Result::[integer()],
+  CarryList::[integer()].
 
 manage_calc_workers(A, B, Base, Parent) ->
   WorkerPIDList = spawn_calc_workers(A, B, Base), %%Reverse this list?
-  CombinePID = spawn(add, combine_results, [[], [], self()]),
-  send_carry(CombinePID, WorkerPIDList, 0),
-
-
-receive
-    {ResultList, CarryList} ->
-      Parent ! {ResultList, CarryList}
-  end.
+  CombinePID = spawn(add, combine_results, [[], [], Parent]),
+  send_carry(CombinePID, WorkerPIDList, 0).
 
 
 
@@ -128,9 +133,10 @@ receive
   A::integer(),
   B::integer(),
   Base::integer(),
-  Result::[integer].
+  Result::[integer()].
 
-%% @doc TODO: add documentation
+%% @doc Accepts 3 ints as input, A and B are the values to add together and Base is the base 
+%% in which the numbers should be shown and the result be.
 start(A,B, Base) ->
     %% Split numbers to create pairs at most.
     %% Create extra 0s in front of the shorter number if necessary.
@@ -150,7 +156,7 @@ start(A,B, Base) ->
         io:write(AList),
         io:fwrite("\n\nB:"),
         io:write(BList),
-        lists:reverse(ResultList)
+        lists:reverse(ResultList);
         %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
         %%                          f  /  e /  d /  c /  b /  a
         %%Print (Carries),
@@ -158,13 +164,17 @@ start(A,B, Base) ->
         %% Print (BList),
         %% Print _the_line_,
         %% Print (Result)
+      A -> 
+        io:fwrite("\nMessage is fucked up")
       after 20000 ->
         io:fwrite("Something went wrong")
     end.
 
 
 
-%% @doc TODO: add documentation
+%% @doc Accepts 3 ints as input, A and B are the values to add together and Base is the base 
+%% in which the numbers should be shown and the result be. /4 also allows an optional touple 
+%% which can contain any of the options listed in the specifications (Update this).
 -spec start(A,B,Base, Options) -> ok when 
       A::integer(),
       B::integer(), 

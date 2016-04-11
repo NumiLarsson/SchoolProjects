@@ -15,8 +15,10 @@ calc_carry_out(Number, Base) ->
   Carry = Number div Base,
   {Result, Carry}.
 
-%% @doc calc_worker is an actor that calculates a simple addition, receiving the carryin 
-%% through a message from the process that want's the return.
+%% @doc calc_worker_spec is an actor that calculates a simple addition, receiving the carryin 
+%% through a message from the process that want's the return.	_spec signifies that this worker
+%% works by speculative work, where it calculates both possible combinations before it is asked
+%% to return an answer.
 
 -spec calc_worker_spec (A, B, Base, Index) -> {Index, {Result, CarryOut}} when
   A::integer(),
@@ -35,13 +37,15 @@ calc_worker_spec (A, B, Base, Index) ->
 
   receive 
     {From, 1} ->
-      From ! {Index, {Result1, CarryOut1}};
+      From ! {Index, {Result1, CarryOut1}},
+      exit(success);
     {From, 0} ->
-      From ! {Index, {Result0, CarryOut0}}
+      From ! {Index, {Result0, CarryOut0}},
+      exit(success)
   end.
 
-
-
+%% @doc calc_worker adds two integers and make sure that they don't have overflow, passes eventual
+%% carries back to whoever pokes it.
 -spec calc_worker(A, B, Base, Index) -> {Index, {Result, CarryOut}} when
 	A::integer(),
 	B::integer(),
@@ -57,8 +61,10 @@ calc_worker(A, B, Base, Index) ->
 		{From, 1} ->
 			Result = ResNoCarry + 1,
 			CarryOut = calc_carry_out(Result, Base),
-			From ! {Index, {Result, CarryOut}};
+			From ! {Index, {Result, CarryOut}},
+			exit(success);
 		{From, 0} ->
 			CarryOut = calc_carry_out(ResNoCarry, Base),
-			From ! {Index, {ResNoCarry, CarryOut}}
+			From ! {Index, {ResNoCarry, CarryOut}},
+			exit(success)
 	end.
