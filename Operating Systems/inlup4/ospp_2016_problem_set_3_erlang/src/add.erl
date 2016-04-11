@@ -20,32 +20,6 @@ split (A, Base) ->
   [Result | split (Rest, Base)].
 
 
--spec insert_at(List, Object, Index) -> List when
-  List::[],
-  Object::integer(),
-  Index::integer().
-
-insert_at([], Object, _Index) ->
-  [Object];
-
-insert_at([H|[]], Object, _Index) ->
-  [H|Object];
-
-insert_at([H|T], Object, 0) ->
-  H ++ Object ++ T;
-
-insert_at([H|T], Object, Index) ->
-  io:write([H|T]),
-  io:fwrite("\n"),
-  io:write(Object),
-  io:fwrite("\n"),
-  io:write(Index),
-  io:fwrite("\n"),
-  [H|insert_at(T, Object, Index - 1)].
-
-
-
-
 -spec combine_results(WorkersActive, ResultList, CarryList, Owner) -> 
     {ResultList, CarryList} when
   WorkersActive::integer(),
@@ -56,9 +30,9 @@ insert_at([H|T], Object, Index) ->
 
 combine_results(WorkersActive, ResultList, CarryList, Owner) ->
   receive
-    {Index, {Result, Carry}} -> 
-      NewResult = insert_at(ResultList, Result, Index),
-      NewCarryList = insert_at(CarryList, Carry, Index),
+    {_Index, {Result, Carry}} -> 
+      NewResult = [Result | ResultList], %%insert_at(ResultList, Result, Index),
+      NewCarryList = [Carry | CarryList], %%insert_at(CarryList, Carry, Index),
       combine_results(WorkersActive - 1, NewResult, NewCarryList, Owner)
     after 2000 ->
       Owner ! {ResultList, CarryList}
@@ -71,15 +45,12 @@ combine_results(WorkersActive, ResultList, CarryList, Owner) ->
   Carry::integer.
 
 send_carry(_Combinator, [], _Carry) -> 
-  io:fwrite("\nDone\n"),
   ok;
 
 send_carry(Combinator, [Worker|TailWorkers], Carry) ->
   Worker ! {self(), Carry},
   receive
     {Index, {Result, NewCarry}} ->
-      io:write(Index),
-      io:fwrite("\n"),
       Combinator ! {Index, {Result, NewCarry}},
       send_carry(Combinator, TailWorkers, NewCarry)
     after 2000 ->
@@ -102,8 +73,8 @@ spawn_calc_workers(A, B, Base) ->
   Index::integer(),
   WorkerPIDList::[integer].
 
-spawn_calc_workers([], [], _Base, _Index) ->
-  [];
+spawn_calc_workers([], [], Base, Index) ->
+  [spawn(calc, calc_worker, [0, 0, Base, Index])];
 spawn_calc_workers([HA|TA], [], Base, Index) ->
   [spawn(calc, calc_worker, [HA, 0, Base, Index]) 
   | spawn_calc_workers(TA, [], Base, Index + 1)];
@@ -131,26 +102,7 @@ manage_calc_workers(A, B, Base, Parent) ->
 
 receive
     {ResultList, CarryList} ->
-      io:write(ResultList),
-      io:fwrite("\n"),
-      io:write(CarryList),
-      io:fwrite("\n"),
-      ResultLength = 1,
-      CarryLength = 0,
-
-      if 
-        ResultLength == CarryLength ->
-          LastCarry = lists:last(CarryList),
-          if 
-            LastCarry == 1 ->
-              FinalResultList = ResultList ++ 1;
-            true ->
-              FinalResultList = ResultList
-          end;
-        true ->
-          FinalResultList = ResultList
-      end,
-      Parent ! {FinalResultList, CarryList}
+      Parent ! {ResultList, CarryList}
   end.
 
 
@@ -177,13 +129,13 @@ start(A,B, Base) ->
       {ResultList, CarryList} ->
         Fail = [ResultList, CarryList, AList, BList],
         io:fwrite("\n\nResult:"),
-        io:write(lists:reverse(ResultList)),
+        io:write(ResultList),
         io:fwrite("\n\nCarries:"),
-        io:write(lists:reverse(CarryList)),
+        io:write(CarryList),
         io:fwrite("\n\nA:"),
-        io:write(lists:reverse(AList)),
+        io:write(AList),
         io:fwrite("\n\nB:"),
-        io:write(lists:reverse(BList)),
+        io:write(BList),
         io:fwrite("\n\n"),
         Fail
         %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
