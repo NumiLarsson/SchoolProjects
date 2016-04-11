@@ -1,5 +1,5 @@
 -module(calc).
--export([calc_worker/4]).
+-export([calc_worker/4, calc_worker_spec/4]).
 
 
 %% @doc calc_carry_out simply takes a number and calculates the carry out it'll have.
@@ -18,7 +18,7 @@ calc_carry_out(Number, Base) ->
 %% @doc calc_worker is an actor that calculates a simple addition, receiving the carryin 
 %% through a message from the process that want's the return.
 
--spec calc_worker (A, B, Base, Index) -> {Index, {Result, CarryOut}} when
+-spec calc_worker_spec (A, B, Base, Index) -> {Index, {Result, CarryOut}} when
   A::integer(),
   B::integer(),
   Base::integer(),
@@ -26,7 +26,7 @@ calc_carry_out(Number, Base) ->
   Result::integer(),
   CarryOut::integer().
 
-calc_worker (A, B, Base, Index) ->
+calc_worker_spec (A, B, Base, Index) ->
   ResCarryIn1 = A + B + 1,
   ResCarryIn0 = A + B, %% + 0,
 
@@ -39,3 +39,26 @@ calc_worker (A, B, Base, Index) ->
     {From, 0} ->
       From ! {Index, {Result0, CarryOut0}}
   end.
+
+
+
+-spec calc_worker(A, B, Base, Index) -> {Index, {Result, CarryOut}} when
+	A::integer(),
+	B::integer(),
+	Base::integer(),
+	Index::integer(),
+	Result::integer(),
+	CarryOut::integer().
+
+calc_worker(A, B, Base, Index) ->
+	ResNoCarry = A + B,
+
+	receive
+		{From, 1} ->
+			Result = ResNoCarry + 1,
+			CarryOut = calc_carry_out(Result, Base),
+			From ! {Index, {Result, CarryOut}};
+		{From, 0} ->
+			CarryOut = calc_carry_out(ResNoCarry, Base),
+			From ! {Index, {ResNoCarry, CarryOut}}
+	end.
