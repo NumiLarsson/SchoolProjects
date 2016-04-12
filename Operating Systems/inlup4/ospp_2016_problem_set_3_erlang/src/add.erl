@@ -1,6 +1,6 @@
 %% @doc Erlang mini project.
 -module(add).
--export([start/3, start/4, manage_calc_workers/4, combine_results/3]).
+-export([start/3, start/4, manage_calc_workers/4, combine_results/4, manage_calc_workers/5]).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Split converts all the numbers from decimal to their own base.
@@ -41,20 +41,22 @@ insert_at([H|T], Object, Index) ->
 
 %% @doc combine_result is the "listener" in this program, simply listens to messages and enters
 %% them in the correct order (using insert_at), in the correct list.
--spec combine_results(ResultList, CarryList, Owner) -> 
+-spec combine_results(ResultList, CarryList, Owner, WorkerPIDList) -> 
     {ResultList, CarryList} when
   ResultList::[integer()],
   CarryList::[integer()],
-  Owner::integer().
+  Owner::integer(),
+  WorkerPIDList::[integer()].
 
-combine_results(ResultList, CarryList, Owner) ->
+combine_results(ResultList,CarryList,Owner, []) ->
+  Owner ! {ResultList, CarryList};
+
+combine_results(ResultList, CarryList, Owner, [_H|T]) ->
   receive
     {Index, {Result, Carry}} ->
       NewResult = insert_at(ResultList, Result, Index), %%[Result | ResultList], 
       NewCarryList = insert_at(CarryList, Carry, Index), %%[Carry | CarryList], %%
-      combine_results(NewResult, NewCarryList, Owner)
-    after 2000 ->
-      Owner ! {ResultList, CarryList}
+      combine_results(NewResult, NewCarryList, Owner, T)
   end.
 
 %% @doc Used to "Fan Out" to all the workers, sending them the correct carries and receiving 
@@ -64,8 +66,12 @@ combine_results(ResultList, CarryList, Owner) ->
   WorkerPIDList::[integer()],
   Carry::integer().
 
-send_carry(_Combinator, [], _Carry) -> 
-  ok;
+send_carry(Combinator, [], _Carry) -> 
+  receive
+    {Index, {Result, NewCarry}} ->
+      Combinator ! {Index, {Result, NewCarry}}
+  end,
+  exit(success);
 
 send_carry(Combinator, [Worker|TailWorkers], Carry) ->
   Worker ! {self(), Carry},
@@ -73,9 +79,31 @@ send_carry(Combinator, [Worker|TailWorkers], Carry) ->
     {Index, {Result, NewCarry}} ->
       Combinator ! {Index, {Result, NewCarry}},
       send_carry(Combinator, TailWorkers, NewCarry)
-    after 2000 ->
+  end.
+
+%% @doc send_carry/4 adds an optional {SleepMin, SleepMax} to add in a random sleep process
+-spec send_carry(Combinator, WorkerPIDList, Carry, {SleepMin, SleepMax}) -> ok when
+  Combinator::integer(),
+  WorkerPIDList::[integer()],
+  Carry::integer(),
+  SleepMin::integer(),
+  SleepMax::integer().
+
+send_carry(_Combinator, [], _Carry, {_SleepMin,_SleepMax}) -> 
+  exit(success);
+
+send_carry(Combinator, [Worker|TailWorkers], Carry, {SleepMin, SleepMax}) ->
+  Worker ! {self(), Carry},
+  receive
+    {Index, {Result, NewCarry}} ->
+      %%Randdomize between SleepMin and SleepMax, how?
+      timer:sleep(SleepMin*1000),
+      Combinator ! {Index, {Result, NewCarry}},
+      send_carry(Combinator, TailWorkers, NewCarry, {SleepMin, SleepMax})
+    after (SleepMax + SleepMin) ->
       exit(success)
   end.
+
 
 %% @doc The process responsible for spawning the right amount of workers and giving them the
 %% correct info to calculate, returns a list containing all the worker PIDs. /3 simply moves it
@@ -122,11 +150,29 @@ spawn_calc_workers([HA|TA], [HB|TB], Base, Index) ->
 
 manage_calc_workers(A, B, Base, Parent) ->
   WorkerPIDList = spawn_calc_workers(A, B, Base), %%Reverse this list?
-  CombinePID = spawn(add, combine_results, [[], [], Parent]),
+  CombinePID = spawn(add, combine_results, [[], [], Parent, WorkerPIDList]),
   send_carry(CombinePID, WorkerPIDList, 0).
 
+-spec manage_calc_workers(A, B, Base, Parent, Options) -> {Result, CarryList} when
+  A::[integer()],
+  B::[integer()],
+  Base::integer(),
+  Parent::integer(),
+  Result::[integer()],
+  CarryList::[integer()],
+  Option::atom() | tuple(),
+  Options::[Option].
 
+manage_calc_workers(A, B, Base, Parent, [sleep, {SleepMin, SleepMax}]) -> 
+  WorkerPIDList = spawn_calc_workers(A, B, Base), %%Reverse this list?
+  CombinePID = spawn(add, combine_results, [[], [], Parent, WorkerPIDList]),
+  send_carry(CombinePID, WorkerPIDList, 0, {SleepMin, SleepMax});
 
+manage_calc_workers(A, B, Base, Parent, []) ->
+  manage_calc_workers(A, B, Base, Parent);
+
+manage_calc_workers(A, B, Base, Parent, _Options) ->
+  manage_calc_workers(A, B, Base, Parent).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -spec start(A, B, Base) -> Result when
@@ -135,17 +181,25 @@ manage_calc_workers(A, B, Base, Parent) ->
   Base::integer(),
   Result::[integer()].
 
+-spec start(A,B,Base, Options) -> ok when 
+      A::integer(),
+      B::integer(), 
+      Base::integer(),
+      Option::atom() | tuple(),
+      Options::[Option].
+
 %% @doc Accepts 3 ints as input, A and B are the values to add together and Base is the base 
 %% in which the numbers should be shown and the result be.
+%% Input is only allowed in decimalform
 start(A,B, Base) ->
-    %% Split numbers to create pairs at most.
-    %% Create extra 0s in front of the shorter number if necessary.
-    %% create a list for all the 
     AList = split (A, Base), 
     BList = split (B, Base),
+    %%Split to create fractions for our workers to work with.
 
+    %%We spawn a process that deals with everything for us
     spawn(add, manage_calc_workers, [AList, BList, Base, self()]),
     
+    %%Result will come to us, {Result, Carries} in [integer()].
     receive
       {ResultList, CarryList} ->
         io:fwrite("\n\nResult:"),
@@ -156,18 +210,9 @@ start(A,B, Base) ->
         io:write(AList),
         io:fwrite("\n\nB:"),
         io:write(BList),
-        lists:reverse(ResultList);
+        lists:reverse(ResultList)
         %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
         %%                          f  /  e /  d /  c /  b /  a
-        %%Print (Carries),
-        %% Print (AList),
-        %% Print (BList),
-        %% Print _the_line_,
-        %% Print (Result)
-      A -> 
-        io:fwrite("\nMessage is fucked up")
-      after 20000 ->
-        io:fwrite("Something went wrong")
     end.
 
 
@@ -175,16 +220,25 @@ start(A,B, Base) ->
 %% @doc Accepts 3 ints as input, A and B are the values to add together and Base is the base 
 %% in which the numbers should be shown and the result be. /4 also allows an optional touple 
 %% which can contain any of the options listed in the specifications (Update this).
--spec start(A,B,Base, Options) -> ok when 
-      A::integer(),
-      B::integer(), 
-      Base::integer(),
-      Option::atom() | tuple(),
-      Options::[Option].
-
+%% Input is only allowed in decimalform
 start(A,B,Base, Options) ->
-    tbi,
-    A,
-    B,
-    Base,
-    Options.
+  AList = split (A, Base), 
+  BList = split (B, Base),
+  %%Split to create fractions for our workers to work with.d
+  io:write(Options),
+  %%We spawn a process that deals with everything for us
+  spawn(add, manage_calc_workers, [AList, BList, Base, self(), Options]),
+  %%Result will come to us, {Result, Carries} in [integer()].
+  receive
+    {ResultList, CarryList} ->
+      io:fwrite("\n\nResult:"),
+      io:write(lists:reverse(ResultList)),
+      io:fwrite("\n\nCarries:"),
+      io:write(lists:reverse(CarryList)),
+      io:fwrite("\n\nA:"),
+      io:write(AList),
+      io:fwrite("\n\nB:"),
+      io:write(BList)
+      %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
+      %%                          f  /  e /  d /  c /  b /  a
+  end.
