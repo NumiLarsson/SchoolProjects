@@ -203,17 +203,27 @@ start(A,B, Base) ->
     %%Result will come to us, {Result, Carries} in [integer()].
     receive
       {ResultList, CarryList} ->
-        io:fwrite("\n\nResult:"),
-        io:write(lists:reverse(ResultList)),
-        io:fwrite("\n\nCarries:"),
-        io:write(lists:reverse(CarryList)),
-        io:fwrite("\n\nA:"),
-        io:write(AList),
-        io:fwrite("\n\nB:"),
-        io:write(BList),
-        lists:reverse(ResultList)
-        %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
-        %%                          f  /  e /  d /  c /  b /  a
+    
+	    Carry = lists:concat(lists:reverse(CarryList)),
+	    AL = lists:concat(lists:reverse(AList)),
+	    BL = lists:concat(lists:reverse(BList)),
+	    Result = lists:concat(lists:reverse(ResultList)),
+	    io:fwrite("\n \n  "),
+	    io:fwrite(Carry),
+	    io:fwrite("\n  "),
+	    repeat("-",length(Carry)),
+	    io:fwrite("\n  "),
+	    repeat(" ",(length(Result)-length(AL))),
+	    io:fwrite(AL),
+	    io:fwrite("\n  "),
+	    repeat(" ",(length(AL)-length(BL))),
+	    repeat(" ",length(Result)-length(AL)),
+	    io:fwrite(BL),
+	    io:fwrite("\n+ "),
+	    repeat("-",length(Result)),
+	    io:fwrite("\n  "),
+	    io:fwrite(Result),
+	    io:fwrite("\n \n \n")
     end.
 
 
