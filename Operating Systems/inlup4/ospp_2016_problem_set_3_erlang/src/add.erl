@@ -181,13 +181,6 @@ manage_calc_workers(A, B, Base, Parent, _Options) ->
   Base::integer(),
   Result::[integer()].
 
--spec start(A,B,Base, Options) -> ok when 
-      A::integer(),
-      B::integer(), 
-      Base::integer(),
-      Option::atom() | tuple(),
-      Options::[Option].
-
 %% @doc Accepts 3 ints as input, A and B are the values to add together and Base is the base 
 %% in which the numbers should be shown and the result be.
 %% Input is only allowed in decimalform
@@ -216,6 +209,13 @@ start(A,B, Base) ->
     end.
 
 
+
+-spec start(A,B,Base, Options) -> ok when 
+      A::integer(),
+      B::integer(), 
+      Base::integer(),
+      Option::atom() | tuple(),
+      Options::[Option].
 
 %% @doc Accepts 3 ints as input, A and B are the values to add together and Base is the base 
 %% in which the numbers should be shown and the result be. /4 also allows an optional touple 
