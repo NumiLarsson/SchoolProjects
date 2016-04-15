@@ -1,6 +1,7 @@
 %% @doc Erlang mini project.
 -module(add).
 -export([start/3, start/4, manage_calc_workers/4, combine_results/4, manage_calc_workers/5]).
+-include_lib("eunit/include/eunit.hrl").
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Split converts all the numbers from decimal to their own base.
@@ -195,17 +196,27 @@ start(A,B, Base) ->
     %%Result will come to us, {Result, Carries} in [integer()].
     receive
       {ResultList, CarryList} ->
-        io:fwrite("\n\nResult:"),
-        io:write(lists:reverse(ResultList)),
-        io:fwrite("\n\nCarries:"),
-        io:write(lists:reverse(CarryList)),
-        io:fwrite("\n\nA:"),
-        io:write(AList),
-        io:fwrite("\n\nB:"),
-        io:write(BList),
-        lists:reverse(ResultList)
-        %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
-        %%                          f  /  e /  d /  c /  b /  a
+    
+	    Carry = lists:concat(lists:reverse(CarryList)),
+	    AL = lists:concat(lists:reverse(AList)),
+	    BL = lists:concat(lists:reverse(BList)),
+	    Result = lists:concat(lists:reverse(ResultList)),
+	    io:fwrite("\n \n  "),
+	    io:fwrite(Carry),
+	    io:fwrite("\n  "),
+	    repeat("-",length(Carry)),
+	    io:fwrite("\n  "),
+	    repeat(" ",(length(Result)-length(AL))),
+	    io:fwrite(AL),
+	    io:fwrite("\n  "),
+	    repeat(" ",(length(AL)-length(BL))),
+	    repeat(" ",length(Result)-length(AL)),
+	    io:fwrite(BL),
+	    io:fwrite("\n+ "),
+	    repeat("-",length(Result)),
+	    io:fwrite("\n  "),
+	    io:fwrite(Result),
+	    io:fwrite("\n \n \n")
     end.
 
 
@@ -231,14 +242,84 @@ start(A,B,Base, Options) ->
   %%Result will come to us, {Result, Carries} in [integer()].
   receive
     {ResultList, CarryList} ->
-      io:fwrite("\n\nResult:"),
-      io:write(lists:reverse(ResultList)),
-      io:fwrite("\n\nCarries:"),
-      io:write(lists:reverse(CarryList)),
-      io:fwrite("\n\nA:"),
-      io:write(AList),
-      io:fwrite("\n\nB:"),
-      io:write(BList)
-      %% Remember to change print 15 / 14 / 13 / 12 / 11 / 10 to
-      %%                          f  /  e /  d /  c /  b /  a
+	    Carry = lists:concat(lists:reverse(CarryList)),
+	    AL = lists:concat(lists:reverse(AList)),
+	    BL = lists:concat(lists:reverse(BList)),
+	    Result = lists:concat(lists:reverse(ResultList)),
+	    io:fwrite("\n \n  "),
+	    io:fwrite(Carry),
+	    io:fwrite("\n  "),
+	    repeat("-",length(Carry)),
+	    io:fwrite("\n  "),
+	    repeat(" ",(length(Result)-length(AL))),
+	    io:fwrite(AL),
+	    io:fwrite("\n  "),
+	    repeat(" ",(length(AL)-length(BL))),
+	    repeat(" ",length(Result)-length(AL)),
+	    io:fwrite(BL),
+	    io:fwrite("\n+ "),
+	    repeat("-",length(Result)),
+	    io:fwrite("\n  "),
+	    io:fwrite(Result),
+	    io:fwrite("\n \n \n")
+
   end.
+
+repeat(_,N) when N < 1 ->
+    io:fwrite("");
+
+repeat(X,N) ->
+    L=lists:flatten(lists:duplicate(N,X)),    
+    io:fwrite(L).
+
+%================TESTS==========================%
+
+calc_dec_test_() ->
+    A = 10,
+    B = 5,
+    Base=10,
+    AList = split(A,Base),
+    BList = split(B,Base),
+    
+    
+    
+spawn(add,manage_calc_workers,[AList,BList,Base,self()]),
+
+receive
+    {Result,Carry} ->
+	
+	[?_assertEqual(lists:reverse(Result),[0,1,5])]
+end.
+
+calc_bin_test_() ->
+    A = 10,
+    B = 5,
+    Base = 2,
+
+    AList = split (A,Base),
+    BList = split (B,Base),
+    
+    
+spawn(add,manage_calc_workers,[AList,BList,Base,self()]),
+receive
+    {Result,Carry} ->
+
+	[?_assertEqual(lists:reverse(Result),[0,1,1,1,1])]
+
+end.
+
+
+calc_hex_test_() ->
+    A = 10,
+    B = 5,
+    Base = 16,
+    
+    AList = split (A,Base),
+    BList = split (B,Base),
+    
+spawn(add,manage_calc_workers,[AList,BList,Base,self()]),
+     
+    receive
+	{Result,Carry} ->
+	    [?_assertEqual(lists:reverse(Result),[0,15])]
+    end.	      
