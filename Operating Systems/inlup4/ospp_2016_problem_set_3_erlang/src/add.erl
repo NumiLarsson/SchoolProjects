@@ -274,7 +274,6 @@ repeat(X,N) ->
 
 %================TESTS==========================%
 
-
 calc_dec_test_() ->
     A = 10,
     B = 5,
@@ -287,7 +286,7 @@ calc_dec_test_() ->
 spawn(add,manage_calc_workers,[AList,BList,Base,self()]),
 
 receive
-    {Result} ->
+    {Result,Carry} ->
 	
 	[?_assertEqual(lists:reverse(Result),[0,1,5])]
 end.
@@ -303,8 +302,10 @@ calc_bin_test_() ->
     
 spawn(add,manage_calc_workers,[AList,BList,Base,self()]),
 receive
-    {Result} ->
+    {Result,Carry} ->
+
 	[?_assertEqual(lists:reverse(Result),[0,1,1,1,1])]
+
 end.
 
 
@@ -319,6 +320,6 @@ calc_hex_test_() ->
 spawn(add,manage_calc_workers,[AList,BList,Base,self()]),
      
     receive
-	{Result} ->
+	{Result,Carry} ->
 	    [?_assertEqual(lists:reverse(Result),[0,15])]
     end.	      
